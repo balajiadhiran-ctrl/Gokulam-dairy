@@ -163,6 +163,7 @@ export const hi: Resources = {
     village: "गांव",
     email: "ईमेल",
     deleteConfirm: "{{name}} को हटाएं?",
+    autoTranslitHint: "हिन्दी और तमिल नाम अंग्रेज़ी से स्वतः भरते हैं — आवश्यकता हो तो संपादित करें।",
   },
   cattle: {
     title: "पशु",

@@ -161,6 +161,7 @@ export const en = {
     village: "Village",
     email: "Email",
     deleteConfirm: "Delete {{name}}?",
+    autoTranslitHint: "Hindi & Tamil names auto-fill from English — edit if needed.",
   },
   cattle: {
     title: "Cattle",

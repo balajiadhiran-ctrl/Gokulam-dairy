@@ -163,6 +163,7 @@ export const ta: Resources = {
     village: "கிராமம்",
     email: "மின்னஞ்சல்",
     deleteConfirm: "{{name}} ஐ நீக்கவா?",
+    autoTranslitHint: "ஹிந்தி & தமிழ் பெயர்கள் ஆங்கிலத்திலிருந்து தானாக நிரப்பப்படும் — தேவைப்பட்டால் திருத்தவும்.",
   },
   cattle: {
     title: "கால்நடைகள்",

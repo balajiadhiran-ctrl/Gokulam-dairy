@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import { api } from "../lib/api";
+import { toDevanagari, toTamil } from "../i18n/translit";
 import { Modal } from "./Modal";
 import type { Owner } from "../lib/types";
 
@@ -33,8 +34,25 @@ export function OwnerFormModal({
   });
   const [error, setError] = useState<string | null>(null);
 
+  // Track the last auto-transliterated values so we only auto-fill while the
+  // Hindi/Tamil fields are untouched (empty or still equal to our suggestion).
+  const lastAuto = useRef({ hi: "", ta: "" });
+
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    const hi = toDevanagari(name);
+    const ta = toTamil(name);
+    setForm((f) => {
+      const next = { ...f, name };
+      if (f.name_hi === "" || f.name_hi === lastAuto.current.hi) next.name_hi = hi;
+      if (f.name_ta === "" || f.name_ta === lastAuto.current.ta) next.name_ta = ta;
+      return next;
+    });
+    lastAuto.current = { hi, ta };
+  };
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -81,7 +99,7 @@ export function OwnerFormModal({
         )}
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-600">{t("owners.name")} (English)</span>
-          <input className={input} value={form.name} onChange={set("name")} required />
+          <input className={input} value={form.name} onChange={onNameChange} required />
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm">
@@ -93,6 +111,7 @@ export function OwnerFormModal({
             <input className={input} value={form.name_ta} onChange={set("name_ta")} placeholder="விருப்பம்" />
           </label>
         </div>
+        <p className="-mt-1 text-[11px] text-slate-400">{t("owners.autoTranslitHint")}</p>
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-slate-600">{t("owners.mobile")}</span>
