@@ -1,0 +1,98 @@
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../lib/auth";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+
+const NAV = [
+  { to: "/admin", key: "admin.dashboard", permission: "dashboard.read", end: true },
+  { to: "/admin/owners", key: "admin.owners", permission: "owners.read", end: false },
+  { to: "/admin/cattle", key: "admin.cattle", permission: "cattle.read", end: false },
+  { to: "/admin/donations", key: "admin.donations", permission: "donations.read", end: false },
+];
+
+export function Layout() {
+  const { t } = useTranslation();
+  const { user, permissions, logout } = useAuth();
+  const navigate = useNavigate();
+  const visible = NAV.filter((n) => permissions.includes(n.permission));
+
+  return (
+    <div className="flex h-full min-h-screen bg-slate-50">
+      {/* Sidebar (design §8) */}
+      <aside className="hidden w-60 shrink-0 flex-col bg-brand-700 text-white sm:flex">
+        <div className="flex items-center gap-2 px-5 py-4 text-lg font-bold tracking-wide">
+          <span className="text-gold-400">🐄</span> GOKULAM
+        </div>
+        <nav className="mt-2 flex-1 space-y-0.5 px-2">
+          {visible.map((n) => (
+            <NavLink
+              key={n.to}
+              to={n.to}
+              end={n.end}
+              className={({ isActive }) =>
+                `flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+                  isActive ? "bg-white/15 font-medium" : "text-white/80 hover:bg-white/10"
+                }`
+              }
+            >
+              <span className="text-gold-400">▸</span>
+              {t(n.key)}
+            </NavLink>
+          ))}
+        </nav>
+        <a
+          href="/"
+          className="mx-2 mb-1 rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+        >
+          ↗ {t("common.viewPublicSite")}
+        </a>
+        <div className="px-4 py-3 text-[11px] text-white/50">Gokulam Dairy ERP · v1.0</div>
+      </aside>
+
+      {/* Main column */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
+          <div className="text-sm font-semibold text-brand-800 sm:hidden">🐄 Gokulam</div>
+          <div className="ml-auto flex items-center gap-3">
+            <LanguageSwitcher variant="dark" />
+            <div className="text-right text-xs leading-tight">
+              <div className="font-medium text-slate-700">{user?.full_name}</div>
+              <div className="text-slate-400">{user?.email}</div>
+            </div>
+            <button
+              onClick={() => {
+                logout();
+                navigate("/login");
+              }}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            >
+              {t("common.signOut")}
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile nav */}
+        <nav className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 py-1.5 sm:hidden">
+          {visible.map((n) => (
+            <NavLink
+              key={n.to}
+              to={n.to}
+              end={n.end}
+              className={({ isActive }) =>
+                `whitespace-nowrap rounded-lg px-3 py-1.5 text-xs ${
+                  isActive ? "bg-brand-100 font-medium text-brand-700" : "text-slate-500"
+                }`
+              }
+            >
+              {t(n.key)}
+            </NavLink>
+          ))}
+        </nav>
+
+        <main className="flex-1 overflow-auto p-4 sm:p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}

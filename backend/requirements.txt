@@ -1,0 +1,10 @@
+# Unpinned to pick up Python 3.14 (cp314) prebuilt wheels.
+# Plain uvicorn (not [standard]) to avoid native watchfiles/httptools builds.
+fastapi
+uvicorn
+SQLAlchemy
+pydantic
+pydantic-settings
+PyJWT
+python-multipart
+email-validator

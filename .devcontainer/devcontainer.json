@@ -1,0 +1,23 @@
+{
+  "name": "Gokulam Dairy Farm",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "forwardPorts": [5173, 8000],
+  "portsAttributes": {
+    "5173": {
+      "label": "Gokulam Web (public site + admin)",
+      "visibility": "public",
+      "onAutoForward": "openPreview"
+    },
+    "8000": {
+      "label": "Gokulam API",
+      "visibility": "private"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postAttachCommand": "nohup bash .devcontainer/start.sh > /tmp/gokulam-start.log 2>&1 &",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "dbaeumer.vscode-eslint"]
+    }
+  }
+}

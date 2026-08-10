@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Gokulam brand palette — cornflower blue (#6395ED) / white / gold */
+@theme {
+  --color-brand-50: #eff4fe;
+  --color-brand-100: #dbe7fc;
+  --color-brand-500: #6395ed;
+  --color-brand-600: #4a82e4;
+  --color-brand-700: #3968cc;
+  --color-brand-800: #2f56ab;
+  --color-gold-400: #f0c040;
+  --color-gold-500: #d4a017;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #f8faf9;
+  color: #14251b;
+}
