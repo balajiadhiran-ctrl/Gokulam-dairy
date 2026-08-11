@@ -1,0 +1,12 @@
+# Render Blueprint — deploys the whole app as one always-on web service.
+# https://render.com  ▸  New +  ▸  Blueprint  ▸  pick this repo.
+services:
+  - type: web
+    name: gokulam-dairy
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free            # change to "starter" ($7/mo) for zero cold-starts (no sleep)
+    healthCheckPath: /health
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true   # Render generates a strong secret

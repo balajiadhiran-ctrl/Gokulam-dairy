@@ -1,0 +1,12 @@
+**/node_modules
+**/.venv
+**/__pycache__
+**/dist
+frontend/dev-dist
+backend/gokulam.db
+backend/media
+backend/.env
+.git
+.claude
+*.log
+docs

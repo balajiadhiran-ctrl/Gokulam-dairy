@@ -62,6 +62,32 @@ git remote add origin https://github.com/<you>/gokulam-dairy.git
 git push -u origin main
 ```
 
+## Always-on deploy (Render) — permanent public URL
+
+The whole app ships as **one Docker image** (Node builds the SPA, Python serves
+it + the API from a single origin), with a `render.yaml` blueprint.
+
+1. Push to GitHub (above).
+2. Sign in at **https://render.com** with your GitHub account.
+3. **New + ▸ Blueprint** → pick the `Gokulam-dairy` repo → **Apply**.
+4. Render builds the Dockerfile and deploys. You get a permanent URL like
+   `https://gokulam-dairy.onrender.com` — public, no login to view.
+
+Demo accounts are seeded on every boot (SQLite). Log in at `/admin` with
+`admin@gokulam.in` / `password123`.
+
+> **Free plan** gives a permanent URL that **sleeps after ~15 min idle** and
+> cold-starts (~30–60s) on the next request — no tab to keep open, unlike
+> Codespaces. For **zero sleep**, switch `plan: free` → `plan: starter` in
+> `render.yaml` (~$7/mo). Uploaded cattle photos and data reset on redeploy
+> (ephemeral disk); add a Render Disk or managed MySQL to persist them.
+
+Run the image locally (if you have Docker):
+```bash
+docker build -t gokulam .
+docker run -p 8000:8000 gokulam    # → http://localhost:8000
+```
+
 ## Routes
 
 - **Public site**: `/` (Home), `/gallery`, `/donate`, `/contact`
