@@ -22,3 +22,7 @@ backend/media/
 Thumbs.db
 .vscode/
 .idea/
+
+# deploy scratch
+.cs_deploy.log
+.cs_name
