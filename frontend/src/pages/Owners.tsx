@@ -61,7 +61,7 @@ export function Owners() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {owners.map((o) => (
-            <div key={o.id} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div key={o.id} className="flex flex-col rounded-2xl glass p-5">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-slate-800">{ownerName(o)}</h3>

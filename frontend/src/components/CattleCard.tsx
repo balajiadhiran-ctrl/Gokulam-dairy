@@ -51,7 +51,7 @@ export function CattleCard({ cattle, onEdit }: { cattle: Cattle; onEdit: (c: Cat
   });
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl glass">
       {/* Photo / placeholder */}
       <div className="relative flex aspect-square items-center justify-center bg-brand-50">
         {cattle.photo_url ? (

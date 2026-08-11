@@ -12,7 +12,7 @@ export function Contact() {
 
       <div className="mt-10 grid gap-8 md:grid-cols-2">
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl glass p-6">
             <h3 className="font-semibold text-slate-800">{t("contact.details")}</h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
               <li>📍 {FARM.address}</li>

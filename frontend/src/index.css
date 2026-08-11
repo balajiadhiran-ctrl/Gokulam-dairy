@@ -20,6 +20,56 @@ body,
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: #f8faf9;
   color: #14251b;
+  background: linear-gradient(135deg, #eef4fe 0%, #dbe7fc 45%, #e7eefe 100%);
+  background-attachment: fixed;
+}
+
+/* Soft blurred colour blobs behind the frosted-glass surfaces. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  background:
+    radial-gradient(38rem 38rem at 12% 12%, rgba(99, 149, 237, 0.45), transparent 60%),
+    radial-gradient(32rem 32rem at 88% 18%, rgba(240, 192, 64, 0.30), transparent 60%),
+    radial-gradient(40rem 40rem at 50% 105%, rgba(74, 130, 228, 0.40), transparent 60%);
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+/* ---- Glassmorphism utilities ---- */
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(31, 41, 80, 0.12);
+}
+.glass-strong {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 12px 44px rgba(31, 41, 80, 0.18);
+}
+.glass-nav {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+}
+/* Dark frosted glass for the admin sidebar (keeps white text readable). */
+.glass-dark {
+  background: linear-gradient(160deg, rgba(47, 86, 171, 0.88), rgba(57, 104, 204, 0.72));
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Frosted form fields so inputs sit nicely on glass cards. */
+input,
+select,
+textarea {
+  background-color: rgba(255, 255, 255, 0.65);
 }

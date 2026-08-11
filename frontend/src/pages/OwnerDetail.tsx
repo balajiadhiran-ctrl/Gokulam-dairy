@@ -65,7 +65,7 @@ export function OwnerDetail() {
       {isLoading ? (
         <p className="text-slate-400">{t("common.loading")}</p>
       ) : cattle.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-400">
+        <div className="rounded-2xl border border-dashed border-white/60 glass p-10 text-center text-slate-400">
           {t("cattle.noneForOwner")}
         </div>
       ) : (

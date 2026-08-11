@@ -16,8 +16,8 @@ export function PublicLayout() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b border-white/40 glass-nav">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2 font-bold text-brand-700">
             <span className="text-2xl">🐄</span>

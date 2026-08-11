@@ -8,7 +8,7 @@ import type { Cattle, OwnerSummary } from "../lib/types";
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl glass p-5">
       <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
       <div className="mt-1 text-2xl font-bold text-brand-700">{value}</div>
       {sub && <div className="text-xs text-slate-400">{sub}</div>}
@@ -64,7 +64,7 @@ export function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Breed distribution */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl glass p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-700">{t("admin.breedDistribution")}</h2>
           {breeds.length === 0 ? (
             <p className="text-sm text-slate-400">{t("admin.noCattle")}</p>
@@ -89,7 +89,7 @@ export function Dashboard() {
         </div>
 
         {/* Top owners by herd size */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl glass p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-700">{t("admin.ownersByHerd")}</h2>
           <ul className="divide-y divide-slate-100">
             {topOwners.map((o) => (

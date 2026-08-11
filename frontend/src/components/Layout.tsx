@@ -17,9 +17,9 @@ export function Layout() {
   const visible = NAV.filter((n) => permissions.includes(n.permission));
 
   return (
-    <div className="flex h-full min-h-screen bg-slate-50">
+    <div className="flex h-full min-h-screen">
       {/* Sidebar (design §8) */}
-      <aside className="hidden w-60 shrink-0 flex-col bg-brand-700 text-white sm:flex">
+      <aside className="hidden w-60 shrink-0 flex-col glass-dark text-white sm:flex">
         <div className="flex items-center gap-2 px-5 py-4 text-lg font-bold tracking-wide">
           <span className="text-gold-400">🐄</span> GOKULAM
         </div>
@@ -51,7 +51,7 @@ export function Layout() {
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
+        <header className="flex items-center justify-between gap-3 border-b border-white/40 glass-nav px-4 py-3">
           <div className="text-sm font-semibold text-brand-800 sm:hidden">🐄 Gokulam</div>
           <div className="ml-auto flex items-center gap-3">
             <LanguageSwitcher variant="dark" />
@@ -72,7 +72,7 @@ export function Layout() {
         </header>
 
         {/* Mobile nav */}
-        <nav className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 py-1.5 sm:hidden">
+        <nav className="flex gap-1 overflow-x-auto border-b border-white/40 glass-nav px-2 py-1.5 sm:hidden">
           {visible.map((n) => (
             <NavLink
               key={n.to}

@@ -89,7 +89,7 @@ export function Donate() {
           </div>
         </div>
 
-        <form onSubmit={submit} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form onSubmit={submit} className="space-y-3 rounded-2xl glass p-6">
           <h2 className="font-semibold text-slate-800">{t("donate.formTitle")}</h2>
 
           <label className="block text-sm">

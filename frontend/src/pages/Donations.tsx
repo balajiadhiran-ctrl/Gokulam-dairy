@@ -64,13 +64,13 @@ export function Donations() {
       {isLoading ? (
         <p className="text-slate-400">{t("common.loading")}</p>
       ) : donations.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-400">
+        <div className="rounded-2xl border border-dashed border-white/60 glass p-10 text-center text-slate-400">
           {t("donationsAdmin.noDonations")}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {donations.map((d) => (
-            <div key={d.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div key={d.id} className="rounded-2xl glass p-5">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-slate-800">{d.donor_name}</h3>

@@ -40,7 +40,7 @@ export function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-700 to-brand-800 p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-xl">
+      <div className="w-full max-w-sm rounded-2xl glass-strong p-7">
         <div className="mb-3 flex justify-end">
           <LanguageSwitcher variant="dark" />
         </div>

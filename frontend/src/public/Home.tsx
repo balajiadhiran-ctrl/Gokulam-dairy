@@ -67,7 +67,7 @@ export function Home() {
           <h2 className="text-center text-3xl font-bold text-slate-800">{t("home.whyTitle")}</h2>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f, i) => (
-              <div key={f.title} className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <div key={f.title} className="rounded-2xl glass p-6">
                 <div className="text-3xl">{FEATURE_ICONS[i]}</div>
                 <h3 className="mt-3 font-semibold text-slate-800">{f.title}</h3>
                 <p className="mt-1 text-sm text-slate-500">{f.text}</p>
@@ -82,7 +82,7 @@ export function Home() {
         <h2 className="text-center text-3xl font-bold text-slate-800">{t("home.productsTitle")}</h2>
         <div className="mt-10 grid gap-6 sm:grid-cols-3">
           {products.map((p, i) => (
-            <div key={p.name} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+            <div key={p.name} className="overflow-hidden rounded-2xl glass">
               <img src={PRODUCT_META[i].img} alt={p.name} className="h-48 w-full object-cover" />
               <div className="p-5">
                 <div className="flex items-center justify-between">
