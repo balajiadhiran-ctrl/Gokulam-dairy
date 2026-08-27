@@ -15,6 +15,13 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # Printed in the header of donation receipts. Keep in step with the public
+    # site's FARM block in frontend/src/public/content.ts.
+    farm_name: str = "Gokulam Dairy Farm"
+    farm_address: str = "Gokulam Village, Tamil Nadu, India"
+    farm_phone: str = "+91 98765 43210"
+    farm_email: str = "hello@gokulamdairy.in"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

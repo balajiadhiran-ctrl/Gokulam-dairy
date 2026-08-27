@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import auth, catalog, donations, milk
+from app.api import auth, catalog, donations, donors, milk
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine
@@ -34,6 +34,7 @@ api_v1 = "/api/v1"
 app.include_router(auth.router, prefix=api_v1)
 app.include_router(catalog.router, prefix=api_v1)
 app.include_router(donations.router, prefix=api_v1)
+app.include_router(donors.router, prefix=api_v1)
 app.include_router(milk.router, prefix=api_v1)
 
 # Serve uploaded cattle photos (local stand-in for S3/MinIO).

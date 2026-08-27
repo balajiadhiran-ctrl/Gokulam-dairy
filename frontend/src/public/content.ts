@@ -56,6 +56,10 @@ export const CATEGORY_KEY: Record<GalleryCategory, string> = {
   Feed: "common.feed",
 };
 
+// Units the donate form offers. Kept in step with UNIT_KG in
+// backend/app/core/rates.py — the server is what actually values a donation.
+export const DONATION_UNITS = ["kg", "quintal", "bag", "bundle", "piece"] as const;
+
 export const DONATION_TYPE_VALUES = [
   "green_fodder",
   "dry_grass",

@@ -115,3 +115,111 @@ export interface MilkAnalyticsRow {
   total_litres: number;
   days: number;
 }
+
+// ---- Donations & donors -------------------------------------------------
+export type DonationType =
+  | "green_fodder"
+  | "dry_grass"
+  | "hay"
+  | "feed"
+  | "mineral"
+  | "other";
+export type DonationUnit = "kg" | "quintal" | "bag" | "bundle" | "piece";
+export type DonationStatus = "new" | "acknowledged" | "received";
+
+// Money arrives as a decimal string ("1500.00") — never a float — so rupee
+// values survive the round trip without binary rounding error.
+export type Money = string;
+
+export interface Donation {
+  id: number;
+  donor_id: number | null;
+  donor_name: string;
+  phone: string | null;
+  email: string | null;
+  donation_type: DonationType;
+  item: string | null;
+  quantity: string | null;
+  quantity_value: Money | null;
+  unit: DonationUnit | null;
+  unit_rate: Money | null;
+  amount: Money | null;
+  receipt_no: string | null;
+  financial_year: string | null;
+  public_token: string | null;
+  message: string | null;
+  status: DonationStatus;
+  created_at: string;
+}
+
+export interface DonationInput {
+  donor_name: string;
+  phone?: string | null;
+  email?: string | null;
+  donation_type: DonationType;
+  item?: string | null;
+  quantity_value?: number | null;
+  unit?: DonationUnit | null;
+  message?: string | null;
+}
+
+export interface DonationUpdate {
+  status?: DonationStatus;
+  item?: string | null;
+  quantity_value?: number | null;
+  unit?: DonationUnit | null;
+  unit_rate?: number | null;
+}
+
+export interface ReceiptFarm {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+export interface Receipt {
+  donation: Donation;
+  donor_code: string | null;
+  amount_in_words: string;
+  farm: ReceiptFarm;
+  /** False while the pledge is outstanding, true once staff log it as arrived. */
+  confirmed: boolean;
+}
+
+export interface RateCard {
+  rate_per_kg: Record<string, string>;
+  unit_kg: Record<string, string | null>;
+}
+
+export interface Donor {
+  id: number;
+  donor_code: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface DonorSummary extends Donor {
+  donation_count: number;
+  total_amount: Money;
+  received_amount: Money;
+  last_donation_at: string | null;
+}
+
+export interface DonorDetail extends DonorSummary {
+  donations: Donation[];
+}
+
+export interface DonorUpdate {
+  name?: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  status?: string;
+}

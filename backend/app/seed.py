@@ -3,15 +3,33 @@ cattle, and a couple weeks of milk records. Idempotent — safe to re-run."""
 from __future__ import annotations
 
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import inspect, select, text
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
-from app.models import Cattle, MilkProduction, Owner, Permission, Role, User
+from app.models import (
+    Cattle,
+    Donation,
+    Donor,
+    MilkProduction,
+    Owner,
+    Permission,
+    Role,
+    User,
+)
+from app.services.donations import (
+    apply_valuation,
+    financial_year,
+    find_or_create_donor,
+    new_public_token,
+    next_receipt_no,
+    quantity_label,
+)
 
 # Permission catalogue for the core slice (design §4.2)
 PERMISSIONS = [
@@ -29,6 +47,8 @@ PERMISSIONS = [
     ("milk.update", "milk"),
     ("donations.read", "donations"),
     ("donations.update", "donations"),
+    ("donors.read", "donors"),
+    ("donors.update", "donors"),
 ]
 
 # Owners + cattle full CRUD — shared by Super Admin and Admin.
@@ -37,6 +57,7 @@ OWNER_CATTLE_CRUD = [
     "owners.read", "owners.create", "owners.update", "owners.delete",
     "cattle.read", "cattle.create", "cattle.update", "cattle.delete",
     "donations.read", "donations.update",
+    "donors.read", "donors.update",
 ]
 
 # role slug -> permission codes ("*" = all)
@@ -53,15 +74,47 @@ ROLES = {
 
 def seed() -> None:
     Base.metadata.create_all(engine)
+    _add_missing_columns()
     db: Session = SessionLocal()
     try:
         _seed_rbac(db)
         _seed_users(db)
         _seed_farm(db)
+        _seed_donations(db)
+        _backfill_donors(db)
         db.commit()
         print("Seed complete.")
     finally:
         db.close()
+
+
+def _add_missing_columns() -> None:
+    """`create_all` builds new tables but never alters existing ones, so a
+    database created before the donor registry existed would be missing the
+    receipt/valuation columns. Add whatever is absent — this is the stand-in
+    for a migration tool on a project that doesn't carry one yet."""
+    wanted = {
+        "donations": [
+            ("donor_id", "INTEGER"),
+            ("receipt_no", "VARCHAR(32)"),
+            ("financial_year", "VARCHAR(9)"),
+            ("public_token", "VARCHAR(32)"),
+            ("quantity_value", "NUMERIC(10, 2)"),
+            ("unit", "VARCHAR(16)"),
+            ("unit_rate", "NUMERIC(10, 2)"),
+            ("amount", "NUMERIC(12, 2)"),
+        ],
+    }
+    inspector = inspect(engine)
+    with engine.begin() as conn:
+        for table, columns in wanted.items():
+            if not inspector.has_table(table):
+                continue
+            existing = {c["name"] for c in inspector.get_columns(table)}
+            for name, ddl_type in columns:
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl_type}"))
+                    print(f"  + {table}.{name}")
 
 
 def _seed_rbac(db: Session) -> None:
@@ -184,6 +237,70 @@ def _seed_farm(db: Session) -> None:
                     recorded_by=staff.id if staff else None,
                 )
             )
+
+
+def _backfill_donors(db: Session) -> None:
+    """Attach any donation that predates the donor registry to a donor row, so
+    the donors list covers the farm's whole history rather than just new
+    pledges."""
+    orphans = list(db.scalars(select(Donation).where(Donation.donor_id.is_(None))))
+    for d in orphans:
+        donor = find_or_create_donor(db, name=d.donor_name, phone=d.phone, email=d.email)
+        d.donor_id = donor.id
+    if orphans:
+        db.flush()
+        print(f"  linked {len(orphans)} earlier donation(s) to the donor registry")
+
+
+def _seed_donations(db: Session) -> None:
+    """A handful of feed donations so the donors list and receipts have
+    something to show on a fresh install."""
+    if db.scalar(select(Donor).limit(1)):
+        return
+
+    rng = random.Random(7)
+    samples = [
+        # (name, phone, email, type, item, qty, unit, days ago, status)
+        ("Anitha Ramesh", "+91 98410 22118", "anitha.r@example.in",
+         "green_fodder", "Napier grass", 120, "kg", 2, "received"),
+        ("Anitha Ramesh", "+91 98410 22118", None,
+         "hay", "Paddy straw hay", 3, "bag", 24, "received"),
+        ("Suresh Kumar", "9840155320", None,
+         "feed", "Cattle feed pellets", 2, "bag", 5, "acknowledged"),
+        ("Devi Textiles Trust", "+91 44 2841 7700", "trust@devitextiles.example",
+         "dry_grass", "Dry fodder bundles", 40, "bundle", 9, "received"),
+        ("M. Balamurugan", "9003477812", "bala.m@example.in",
+         "mineral", "Mineral mixture", 15, "kg", 13, "new"),
+        ("Lakshmi Ammal", None, None,
+         "green_fodder", "Co-4 fodder", 2, "quintal", 18, "received"),
+        ("Suresh Kumar", "9840155320", "suresh.k@example.in",
+         "green_fodder", "Maize fodder", 250, "kg", 31, "received"),
+    ]
+
+    for name, phone, email, dtype, item, qty, unit, days_ago, status in samples:
+        donor = find_or_create_donor(db, name=name, phone=phone, email=email)
+        fy = financial_year()
+        created = datetime.now() - timedelta(days=days_ago, hours=rng.randint(0, 20))
+        d = Donation(
+            donor_id=donor.id,
+            donor_name=name,
+            phone=phone,
+            email=email,
+            donation_type=dtype,
+            item=item,
+            quantity_value=Decimal(qty),
+            unit=unit,
+            quantity=quantity_label(Decimal(qty), unit),
+            status=status,
+            financial_year=fy,
+            receipt_no=next_receipt_no(db, fy),
+            public_token=new_public_token(),
+            created_at=created,
+            updated_at=created,
+        )
+        apply_valuation(d)
+        db.add(d)
+    db.flush()
 
 
 if __name__ == "__main__":

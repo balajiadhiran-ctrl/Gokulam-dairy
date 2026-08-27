@@ -13,6 +13,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Table,
@@ -119,21 +120,69 @@ class Cattle(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
         return f"/media/{self.photo_path}" if self.photo_path else None
 
 
+class Donor(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
+    """The donor registry — one row per person who has given feed, however many
+    times. Public pledges are matched onto an existing donor by phone, then
+    email, then name, so a repeat giver accumulates against a single record
+    instead of creating a new one each time."""
+
+    __tablename__ = "donors"
+    donor_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(120))
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    address: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    # Normalised match keys — `phone`/`email` keep whatever the donor typed for
+    # display, these are what repeat-donor lookup compares against.
+    phone_key: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
+    email_key: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    name_key: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
+    donations: Mapped[list["Donation"]] = relationship(back_populates="donor")
+
+
+class ReceiptCounter(Base):
+    """Per-financial-year receipt sequence, so numbers run 0001, 0002, ...
+    within each year. Allocated inside the donation's own transaction."""
+
+    __tablename__ = "receipt_counters"
+    financial_year: Mapped[str] = mapped_column(String(9), primary_key=True)  # "2026-27"
+    last_number: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class Donation(Base, PKMixin, TimestampMixin):
     """Public in-kind feed donations — donors pledge green fodder, grass, hay or
     other food items for the cattle. Submitted from the public website; triaged
-    by staff in the admin ERP."""
+    by staff in the admin ERP.
+
+    No money changes hands: `amount` is the *indicative* value of the goods
+    given, derived from the farm rate card (app/core/rates.py) so the donor can
+    be thanked with a receipt showing what their contribution was worth."""
 
     __tablename__ = "donations"
+    donor_id: Mapped[int | None] = mapped_column(ForeignKey("donors.id"), nullable=True, index=True)
     donor_name: Mapped[str] = mapped_column(String(120))
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # green_fodder / dry_grass / hay / feed / mineral / other
     donation_type: Mapped[str] = mapped_column(String(32))
     item: Mapped[str | None] = mapped_column(String(160), nullable=True)
-    quantity: Mapped[str | None] = mapped_column(String(80), nullable=True)  # e.g. "50 kg"
+    quantity: Mapped[str | None] = mapped_column(String(80), nullable=True)  # display, e.g. "50 kg"
     message: Mapped[str | None] = mapped_column(String(500), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="new")  # new/acknowledged/received
+
+    # ---- Receipt / valuation ----
+    receipt_no: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
+    financial_year: Mapped[str | None] = mapped_column(String(9), nullable=True, index=True)
+    # Unguessable id for the donor's public receipt link (receipt_no is sequential).
+    public_token: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
+    quantity_value: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(16), nullable=True)  # kg/quintal/bag/bundle/piece
+    unit_rate: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # ₹ per entered unit
+    amount: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+
+    donor: Mapped[Donor | None] = relationship(back_populates="donations")
 
 
 class MilkProduction(Base, PKMixin, TimestampMixin, SoftDeleteMixin):

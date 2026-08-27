@@ -418,3 +418,44 @@ a:hover > .logo-mark,
     filter: none !important;
   }
 }
+
+/* ==========================================================================
+   Print — donation receipts. Everything except `.receipt-sheet` is dropped so
+   Ctrl+P from the thank-you page or /receipt/:token yields a clean document.
+   ========================================================================== */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  body::before {
+    display: none !important;
+  }
+  /* Hide every ancestor's siblings, then un-hide the chain down to the sheet. */
+  body * {
+    visibility: hidden;
+  }
+  .receipt-sheet,
+  .receipt-sheet * {
+    visibility: visible;
+  }
+  .receipt-sheet {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  /* Tailwind's colour utilities drop out of print by default in some engines. */
+  .receipt-sheet * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

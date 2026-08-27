@@ -8,6 +8,7 @@ const NAV = [
   { to: "/admin/owners", key: "admin.owners", permission: "owners.read", end: false },
   { to: "/admin/cattle", key: "admin.cattle", permission: "cattle.read", end: false },
   { to: "/admin/donations", key: "admin.donations", permission: "donations.read", end: false },
+  { to: "/admin/donors", key: "admin.donors", permission: "donors.read", end: false },
 ];
 
 export function Layout() {

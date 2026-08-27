@@ -8,12 +8,14 @@ import { Owners } from "./pages/Owners";
 import { OwnerDetail } from "./pages/OwnerDetail";
 import { AllCattle } from "./pages/AllCattle";
 import { Donations } from "./pages/Donations";
+import { Donors } from "./pages/Donors";
 // Public marketing site / portfolio
 import { PublicLayout } from "./public/PublicLayout";
 import { Home } from "./public/Home";
 import { Gallery } from "./public/Gallery";
 import { Donate } from "./public/Donate";
 import { Contact } from "./public/Contact";
+import { Receipt } from "./public/Receipt";
 
 export default function App() {
   return (
@@ -26,6 +28,8 @@ export default function App() {
             <Route path="gallery" element={<Gallery />} />
             <Route path="donate" element={<Donate />} />
             <Route path="contact" element={<Contact />} />
+            {/* Donor's own receipt link — public, keyed on an unguessable token. */}
+            <Route path="receipt/:token" element={<Receipt />} />
           </Route>
 
           <Route path="/login" element={<Login />} />
@@ -69,6 +73,14 @@ export default function App() {
               element={
                 <ProtectedRoute permission="donations.read">
                   <Donations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="donors"
+              element={
+                <ProtectedRoute permission="donors.read">
+                  <Donors />
                 </ProtectedRoute>
               }
             />

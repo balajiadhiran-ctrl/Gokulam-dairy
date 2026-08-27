@@ -21,7 +21,9 @@ An installable **PWA** with two faces sharing one backend:
 | Public website — Home, Gallery, Donate, Contact (responsive) | ✅ |
 | Cow/buffalo/farm imagery (free CC images in `public/images/`) | ✅ |
 | Donate Feed — public pledge form → `POST /donations` | ✅ |
-| Admin donation triage (new → acknowledged → received) | ✅ |
+| Donation receipts — invoice-format thank-you with the contribution value | ✅ |
+| Donor registry — repeat donors matched, lifetime totals, searchable | ✅ |
+| Admin donation triage (new → acknowledged → received) + valuation | ✅ |
 | JWT login + refresh, session restore | ✅ |
 | Permission-based RBAC (Super Admin, Admin, Manager, Staff, Owner) | ✅ |
 | Owners — full CRUD, search, herd counts + breed breakdown | ✅ |
@@ -90,9 +92,10 @@ docker run -p 8000:8000 gokulam    # → http://localhost:8000
 
 ## Routes
 
-- **Public site**: `/` (Home), `/gallery`, `/donate`, `/contact`
+- **Public site**: `/` (Home), `/gallery`, `/donate`, `/contact`, `/receipt/:token`
 - **Login**: `/login`
-- **Admin ERP**: `/admin` (Dashboard), `/admin/owners`, `/admin/cattle`, `/admin/donations`
+- **Admin ERP**: `/admin` (Dashboard), `/admin/owners`, `/admin/cattle`,
+  `/admin/donations`, `/admin/donors`
 
 ## Prerequisites
 
@@ -138,12 +141,28 @@ Open http://127.0.0.1:5173 — Vite proxies `/api` to the backend on 8000.
 1. Browse the **Home** hero, stats, products and gallery preview.
 2. **Gallery** — filter cow/buffalo/calf/farm photos, click for a lightbox.
 3. **Donate** — pledge feed (green fodder, grass, hay…); submits with no login.
+   Enter a quantity and the form shows what the contribution is worth; on submit
+   you get a printable **donation receipt** with a receipt number, itemised line,
+   total and amount in words. The `/receipt/:token` link keeps working afterwards.
 
 **Admin** — click **Login**, sign in as **Admin** (`admin@gokulam.in` / `password123`):
 1. **Owners** — cards with total/cow/buffalo counts and breed chips; add/edit/delete.
 2. **View cattle** on an owner — gallery; add cattle and **Add photo** (JPEG/PNG/WebP).
 3. **Cattle** — all animals, filterable by owner and type.
-4. **Donations** — see donor pledges and move them new → acknowledged → received.
+4. **Donations** — donor pledges with their receipt number and value; move them
+   new → acknowledged → received, or price anything the rate card could not value.
+5. **Donors** — the registry: every donor with donation count, lifetime value and
+   last donation. Click a row for their full history and receipt links.
+
+### Valuing in-kind donations
+
+No money changes hands — a donation is feed, not a payment. To thank donors with
+a figure, each feed type carries an indicative farm-gate rate per kilogram in
+`backend/app/core/rates.py`, and units convert to kilograms there too
+(1 bag = 50 kg, 1 bundle = 20 kg, 1 quintal = 100 kg). **Edit that file to match
+your farm's real rates.** Staff can override the rate on any individual donation
+from the admin screen. Receipts are labelled *Donation Receipt*, not tax
+invoices, and say plainly that nothing is payable.
 
 ## Production notes
 
