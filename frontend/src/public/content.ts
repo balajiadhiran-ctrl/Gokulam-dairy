@@ -60,6 +60,17 @@ export const CATEGORY_KEY: Record<GalleryCategory, string> = {
 // backend/app/core/rates.py — the server is what actually values a donation.
 export const DONATION_UNITS = ["kg", "quintal", "bag", "bundle", "piece"] as const;
 
+// Emoji per donation category, for compact lists where the full translated
+// label ("🌿 Green Fodder") would crowd the item name out.
+export const DONATION_TYPE_ICON: Record<string, string> = {
+  green_fodder: "🌿",
+  dry_grass: "🌾",
+  hay: "🌾",
+  feed: "🥣",
+  mineral: "🧂",
+  other: "📦",
+};
+
 export const DONATION_TYPE_VALUES = [
   "green_fodder",
   "dry_grass",

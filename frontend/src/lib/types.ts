@@ -259,10 +259,21 @@ export interface DonorUpdate {
   show_publicly?: boolean;
 }
 
+/** One gift as it appears publicly: what and when, never how much it was worth. */
+export interface WallDonation {
+  item: string | null;
+  item_hi: string | null;
+  item_ta: string | null;
+  donation_type: DonationType;
+  quantity: string | null;
+  donated_at: string;
+}
+
 /** One name on the public thank-you wall — no contact details, no amounts. */
 export interface WallDonor {
   name: string;
   donation_count: number;
+  donations: WallDonation[];
 }
 
 export interface DonorWall {

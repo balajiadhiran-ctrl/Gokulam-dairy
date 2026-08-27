@@ -291,11 +291,25 @@ class ReceiptOut(BaseModel):
 
 
 # ---- Public donors wall --------------------------------------------------
+class WallDonation(BaseModel):
+    """A single gift as it appears publicly: what it was and when it came.
+    No rupee figure — the wall thanks people, it doesn't rank them."""
+    item: str | None = None
+    # Hindi/Tamil names resolved from the catalogue item when the donation
+    # references one, so the wall reads correctly in every language.
+    item_hi: str | None = None
+    item_ta: str | None = None
+    donation_type: str
+    quantity: str | None = None
+    donated_at: datetime
+
+
 class WallDonor(BaseModel):
     """One name on the public wall. Deliberately carries no contact details and
-    no rupee figures — just who gave and how often."""
+    no rupee figures — just who gave, what, and when."""
     name: str
     donation_count: int
+    donations: list[WallDonation] = []
 
 
 class DonorWall(BaseModel):

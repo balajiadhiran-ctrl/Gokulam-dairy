@@ -202,7 +202,7 @@ export function Home() {
           {wall.listed.length > 0 && (
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {wall.listed.slice(0, 6).map((d, i) => (
-                <DonorCard key={d.name} name={d.name} count={d.donation_count} delay={i * 60} />
+                <DonorCard key={d.name} donor={d} delay={i * 60} maxGifts={2} />
               ))}
             </div>
           )}

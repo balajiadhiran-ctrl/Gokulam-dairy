@@ -24,7 +24,7 @@ An installable **PWA** with two faces sharing one backend:
 | Feed catalogue — CRUD of feed items and their cost (Super Admin / Admin) | ✅ |
 | Donation receipts — invoice-format thank-you with the contribution value | ✅ |
 | Donor registry — repeat donors matched, lifetime totals, searchable | ✅ |
-| Public donors wall — true donor count, names shown only with consent | ✅ |
+| Public donors wall — true donor count; names, gifts and dates with consent | ✅ |
 | Admin donation triage (new → acknowledged → received) + valuation | ✅ |
 | JWT login + refresh, session restore | ✅ |
 | Permission-based RBAC (Super Admin, Admin, Manager, Staff, Owner) | ✅ |
@@ -166,9 +166,10 @@ Open http://127.0.0.1:5173 — Vite proxies `/api` to the backend on 8000.
 `/donors` is a thank-you wall. The two totals — donors and donations — count
 **everyone** on the register, because a number identifies nobody. Names appear
 only for donors who ticked *"Show my name on the donors wall"* on the pledge
-form; the box is unticked by default, and donors already on file when this was
-added stay unlisted. Phone numbers, email addresses and rupee amounts are never
-published. Ticking the box opts a donor in; a later pledge with the box unticked
+form, together with **what they gave and when**; the box is unticked by default,
+and donors already on file when this was added stay unlisted. Phone numbers,
+email addresses and rupee amounts are never published — the wall thanks people,
+it does not rank them. Ticking the box opts a donor in; a later pledge with the box unticked
 never silently removes a name they already agreed to — staff unlist on request
 from the admin **Donors** screen.
 

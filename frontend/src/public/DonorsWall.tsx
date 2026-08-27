@@ -4,7 +4,9 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { Reveal } from "../components/Reveal";
 import { CountUp } from "../components/CountUp";
-import type { DonorWall } from "../lib/types";
+import { useDataNames } from "../i18n/dataNames";
+import { DONATION_TYPE_ICON } from "./content";
+import type { DonorWall, WallDonation, WallDonor } from "../lib/types";
 
 /** Shared fetch so the Home preview and the full page hit the API once each. */
 export function useDonorWall() {
@@ -34,23 +36,77 @@ function initials(name: string): string {
     .join("");
 }
 
-export function DonorCard({ name, count, delay }: { name: string; count: number; delay: number }) {
-  const { t } = useTranslation();
+/** One gift line: what it was, how much, and when it arrived. */
+function GiftLine({ gift }: { gift: WallDonation }) {
+  const { t, i18n } = useTranslation();
+  const { feedName } = useDataNames();
+
+  const label = gift.item
+    ? feedName({ name: gift.item, name_hi: gift.item_hi, name_ta: gift.item_ta })
+    : t(`donate.types.${gift.donation_type}`);
+
+  const when = new Date(gift.donated_at).toLocaleDateString(i18n.language, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
   return (
-    <Reveal
-      from="zoom"
-      delay={delay}
-      className="sheen hover-lift flex items-center gap-3 rounded-2xl glass px-4 py-3"
-    >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-bold text-white">
-        {initials(name)}
+    <li className="flex items-baseline gap-2 text-sm">
+      <span aria-hidden className="shrink-0">
+        {DONATION_TYPE_ICON[gift.donation_type] ?? "📦"}
       </span>
-      <span className="min-w-0">
-        <span className="block truncate font-medium text-slate-800">{name}</span>
-        <span className="block text-xs text-slate-500">
-          {t("donorsWall.donationCount", { count })}
+      <span className="min-w-0 flex-1">
+        <span className="text-slate-700">
+          {gift.quantity && <span className="font-medium">{gift.quantity} </span>}
+          {label}
         </span>
+        <span className="block text-[11px] text-slate-400">{when}</span>
       </span>
+    </li>
+  );
+}
+
+export function DonorCard({
+  donor,
+  delay,
+  maxGifts = 3,
+}: {
+  donor: WallDonor;
+  delay: number;
+  /** Older gifts collapse into a "+N more" line so cards stay even. */
+  maxGifts?: number;
+}) {
+  const { t } = useTranslation();
+  const shown = donor.donations.slice(0, maxGifts);
+  const hidden = donor.donations.length - shown.length;
+
+  return (
+    <Reveal from="zoom" delay={delay} className="sheen hover-lift rounded-2xl glass p-4">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-bold text-white">
+          {initials(donor.name)}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate font-medium text-slate-800">{donor.name}</span>
+          <span className="block text-xs text-slate-500">
+            {t("donorsWall.donationCount", { count: donor.donation_count })}
+          </span>
+        </span>
+      </div>
+
+      {shown.length > 0 && (
+        <ul className="mt-3 space-y-2 border-t border-white/60 pt-3">
+          {shown.map((g, i) => (
+            <GiftLine key={`${g.donated_at}-${i}`} gift={g} />
+          ))}
+          {hidden > 0 && (
+            <li className="text-[11px] text-slate-400">
+              {t("donorsWall.andMore", { count: hidden })}
+            </li>
+          )}
+        </ul>
+      )}
     </Reveal>
   );
 }
@@ -100,9 +156,9 @@ export function DonorsWall() {
             {wall.listed.map((d, i) => (
               <DonorCard
                 key={d.name}
-                name={d.name}
-                count={d.donation_count}
+                donor={d}
                 delay={Math.min(i, 12) * 55}
+                maxGifts={4}
               />
             ))}
           </div>

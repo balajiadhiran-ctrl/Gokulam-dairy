@@ -112,7 +112,7 @@ export const en = {
       "Tell us what you would like to give and our team will price it when they collect it.",
     showPublicly: "Show my name on the donors wall",
     showPubliclyHint:
-      "Only your name and how many times you have donated are shown — never your phone, email or amount. Leave this unticked to stay anonymous. You can ask us to remove your name at any time.",
+      "Shows your name, what you donated and when — never your phone, email or the value. Leave this unticked to stay anonymous. You can ask us to remove your name at any time.",
     units: {
       kg: "kg",
       quintal: "quintal",
@@ -304,13 +304,15 @@ export const en = {
     statDonors: "Kind donors",
     statDonations: "Donations",
     namesTitle: "Thank you",
-    namesNote: "Listed with their permission.",
+    namesNote: "Listed with their permission — what they gave, and when.",
     donationCount_one: "{{count}} donation",
     donationCount_other: "{{count}} donations",
+    andMore_one: "and {{count}} more gift",
+    andMore_other: "and {{count}} more gifts",
     emptyNames:
       "No donor has asked to be named yet. Every donation still counts towards the totals above.",
     consentNote:
-      "Donors are named here only if they tick the box on the donation form. We never publish phone numbers, email addresses or amounts. If you would like your name added or removed, just contact the farm.",
+      "Donors are named here only if they tick the box on the donation form, along with what they donated and when. We never publish phone numbers, email addresses or amounts. If you would like your name added or removed, just contact the farm.",
     joinCta: "Donate feed 🌿",
     homeTitle: "Fed by kind hearts",
     homeText:

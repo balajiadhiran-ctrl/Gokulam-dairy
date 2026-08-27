@@ -3,7 +3,7 @@
 Rows are created automatically when a pledge comes in from the public site
 (see app/services/donations.py); this module is the admin-side view of that
 registry, with lifetime totals so staff can see who gives, how often and how
-much their contributions are worth.
+much their contributions are worth, plus the public thank-you wall.
 """
 from __future__ import annotations
 
@@ -15,8 +15,15 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_permission
 from app.db.session import get_db
-from app.models import Donation, Donor, User
-from app.schemas import DonorDetail, DonorSummary, DonorUpdate, DonorWall, WallDonor
+from app.models import Donation, Donor, FeedItem, User
+from app.schemas import (
+    DonorDetail,
+    DonorSummary,
+    DonorUpdate,
+    DonorWall,
+    WallDonation,
+    WallDonor,
+)
 from app.services.donations import normalise_email, normalise_name, normalise_phone
 
 router = APIRouter(prefix="/donors", tags=["donors"])
@@ -27,23 +34,48 @@ def donor_wall(db: Session = Depends(get_db)) -> DonorWall:
     """Public thank-you wall for the marketing site.
 
     The two totals cover every donor on the register — a count names nobody, so
-    it can be honest. `listed` contains only donors who ticked the consent box
-    when they pledged, ordered by how often they have given.
+    it can be honest. `listed` contains only donors who consented, each with
+    what they gave and when. Contact details and rupee amounts never appear
+    here, whatever the donor consented to.
     """
     donors = list(db.scalars(select(Donor).where(Donor.deleted_at.is_(None))))
-    counts = dict(
-        db.execute(
-            select(Donation.donor_id, func.count(Donation.id))
-            .where(Donation.donor_id.isnot(None))
-            .group_by(Donation.donor_id)
-        ).all()
-    )
+    consenting = {d.id: d for d in donors if d.show_publicly and d.status == "active"}
+
+    counts: dict[int, int] = {}
+    gifts: dict[int, list[WallDonation]] = {}
+    # Left join: free-text donations have no catalogue row to translate from.
+    rows = db.execute(
+        select(Donation, FeedItem)
+        .outerjoin(FeedItem, Donation.feed_item_id == FeedItem.id)
+        .where(Donation.donor_id.isnot(None))
+        .order_by(Donation.created_at.desc())
+    ).all()
+
+    for donation, item in rows:
+        counts[donation.donor_id] = counts.get(donation.donor_id, 0) + 1
+        if donation.donor_id not in consenting:
+            continue
+        gifts.setdefault(donation.donor_id, []).append(
+            WallDonation(
+                item=donation.item,
+                # Taken from the catalogue row as it stands now; the English
+                # name on the donation is the snapshot it was given under.
+                item_hi=item.name_hi if item else None,
+                item_ta=item.name_ta if item else None,
+                donation_type=donation.donation_type,
+                quantity=donation.quantity,
+                donated_at=donation.created_at,
+            )
+        )
 
     listed = sorted(
         (
-            WallDonor(name=d.name, donation_count=counts.get(d.id, 0))
-            for d in donors
-            if d.show_publicly and d.status == "active"
+            WallDonor(
+                name=d.name,
+                donation_count=counts.get(d.id, 0),
+                donations=gifts.get(d.id, []),
+            )
+            for d in consenting.values()
         ),
         key=lambda w: (-w.donation_count, w.name.lower()),
     )
