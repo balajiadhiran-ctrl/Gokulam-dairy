@@ -39,6 +39,19 @@ export function localizeBreed(breed: string | null | undefined, lang: Lang): str
   return breed;
 }
 
+interface FeedLike {
+  name: string;
+  name_hi?: string | null;
+  name_ta?: string | null;
+}
+
+/** Feed items carry their own Hindi/Tamil names, same as owners. */
+export function localizeFeedName(item: FeedLike, lang: Lang): string {
+  if (lang === "hi") return item.name_hi || item.name;
+  if (lang === "ta") return item.name_ta || item.name;
+  return item.name;
+}
+
 /** Hook that returns localizers bound to the current UI language. */
 export function useDataNames() {
   const { i18n } = useTranslation();
@@ -47,5 +60,6 @@ export function useDataNames() {
     lang,
     ownerName: (o: OwnerLike) => localizeOwnerName(o, lang),
     breed: (b: string | null | undefined) => localizeBreed(b, lang),
+    feedName: (f: FeedLike) => localizeFeedName(f, lang),
   };
 }

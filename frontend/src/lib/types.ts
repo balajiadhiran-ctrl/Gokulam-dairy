@@ -131,9 +131,37 @@ export type DonationStatus = "new" | "acknowledged" | "received";
 // values survive the round trip without binary rounding error.
 export type Money = string;
 
+/** One row of the farm's feed catalogue: what it is and what it costs. */
+export interface FeedItem {
+  id: number;
+  feed_code: string;
+  name: string;
+  name_hi: string | null;
+  name_ta: string | null;
+  category: DonationType;
+  unit: DonationUnit;
+  /** Rupees per `unit`, as a decimal string. */
+  rate: Money;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface FeedItemInput {
+  name: string;
+  name_hi?: string | null;
+  name_ta?: string | null;
+  category: DonationType;
+  unit: DonationUnit;
+  rate: string;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
 export interface Donation {
   id: number;
   donor_id: number | null;
+  feed_item_id: number | null;
   donor_name: string;
   phone: string | null;
   email: string | null;
@@ -154,6 +182,8 @@ export interface Donation {
 
 export interface DonationInput {
   donor_name: string;
+  /** Picked from the catalogue; supplies the category, unit and rate. */
+  feed_item_id?: number | null;
   phone?: string | null;
   email?: string | null;
   donation_type: DonationType;
@@ -167,6 +197,7 @@ export interface DonationInput {
 
 export interface DonationUpdate {
   status?: DonationStatus;
+  feed_item_id?: number | null;
   item?: string | null;
   quantity_value?: number | null;
   unit?: DonationUnit | null;

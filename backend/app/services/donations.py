@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.rates import rupees_in_words, value_donation
-from app.models import Donation, Donor, ReceiptCounter
+from app.models import Donation, Donor, FeedItem, ReceiptCounter
 from app.schemas import ReceiptFarm, ReceiptOut
 
 # ---------------------------------------------------------------------------
@@ -134,9 +134,23 @@ def quantity_label(value: Decimal | None, unit: str | None) -> str | None:
     return f"{text} {unit}"
 
 
+def apply_catalogue_item(donation: Donation, item: FeedItem) -> None:
+    """Copy a catalogue item onto a donation.
+
+    The name and rate are *snapshotted*: editing or retiring the feed item later
+    must not change a receipt that has already been issued.
+    """
+    donation.feed_item_id = item.id
+    donation.donation_type = item.category
+    donation.item = item.name
+    donation.unit = item.unit
+    donation.unit_rate = Decimal(item.rate) if item.rate is not None else None
+
+
 def apply_valuation(donation: Donation) -> None:
-    """Recompute unit_rate/amount from the rate card, honouring an explicit
-    unit_rate already set on the row (a staff override)."""
+    """Recompute unit_rate/amount, honouring an explicit unit_rate already set
+    on the row — which is both a staff override and the rate snapshotted from a
+    catalogue item. Falls back to the farm rate card when neither applies."""
     rate, amount = value_donation(
         donation.donation_type,
         Decimal(donation.quantity_value) if donation.quantity_value is not None else None,

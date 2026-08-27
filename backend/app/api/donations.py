@@ -17,9 +17,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_permission
 from app.core.rates import RATE_PER_KG, UNIT_KG
 from app.db.session import get_db
-from app.models import Donation, User
+from app.models import Donation, FeedItem, User
 from app.schemas import DonationCreate, DonationOut, DonationStatusUpdate, ReceiptOut
 from app.services.donations import (
+    apply_catalogue_item,
     apply_valuation,
     build_receipt,
     financial_year,
@@ -44,6 +45,14 @@ def create_donation(body: DonationCreate, db: Session = Depends(get_db)) -> Dona
     if body.show_publicly:
         donor.show_publicly = True
 
+    # A catalogue pick wins over the free-text fields: its category, unit and
+    # rate are authoritative, and get snapshotted onto the donation below.
+    chosen: FeedItem | None = None
+    if body.feed_item_id is not None:
+        chosen = db.get(FeedItem, body.feed_item_id)
+        if not chosen or chosen.deleted_at is not None or not chosen.is_active:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Feed item not available")
+
     fy = financial_year()
     donation = Donation(
         donor_id=donor.id,
@@ -62,6 +71,9 @@ def create_donation(body: DonationCreate, db: Session = Depends(get_db)) -> Dona
         receipt_no=next_receipt_no(db, fy),
         public_token=new_public_token(),
     )
+    if chosen:
+        apply_catalogue_item(donation, chosen)
+        donation.quantity = quantity_label(body.quantity_value, donation.unit) or donation.quantity
     apply_valuation(donation)
 
     db.add(donation)
@@ -125,7 +137,17 @@ def update_donation(
     if "item" in fields:
         donation.item = fields["item"]
 
-    revalue = False
+    if "feed_item_id" in fields:
+        if fields["feed_item_id"] is None:
+            donation.feed_item_id = None
+        else:
+            item = db.get(FeedItem, fields["feed_item_id"])
+            if not item or item.deleted_at is not None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "Feed item not found")
+            apply_catalogue_item(donation, item)
+        fields.setdefault("unit_rate", donation.unit_rate)
+
+    revalue = "feed_item_id" in fields
     for key in ("quantity_value", "unit", "unit_rate"):
         if key in fields:
             setattr(donation, key, fields[key])

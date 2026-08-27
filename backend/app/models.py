@@ -120,6 +120,28 @@ class Cattle(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
         return f"/media/{self.photo_path}" if self.photo_path else None
 
 
+class FeedItem(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
+    """The farm's feed catalogue — what the cattle eat and what it costs.
+
+    Staff maintain it in the admin ERP; the public donate form lists the active
+    items so a donor picks real feed at the farm's own rate instead of typing
+    free text. Rates are copied onto a donation when it is made, so editing an
+    item here never rewrites a receipt that was already issued."""
+
+    __tablename__ = "feed_items"
+    feed_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(120))              # English / default
+    name_hi: Mapped[str | None] = mapped_column(String(120), nullable=True)  # हिन्दी
+    name_ta: Mapped[str | None] = mapped_column(String(120), nullable=True)  # தமிழ்
+    # Matches the donation types, so a donation inherits its item's category.
+    category: Mapped[str] = mapped_column(String(32), index=True)
+    unit: Mapped[str] = mapped_column(String(16))               # kg/quintal/bag/bundle/piece
+    rate: Mapped[float] = mapped_column(Numeric(10, 2), default=0)  # ₹ per unit
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Inactive items stay for history but drop off the public donate form.
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
 class Donor(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
     """The donor registry — one row per person who has given feed, however many
     times. Public pledges are matched onto an existing donor by phone, then
@@ -166,6 +188,11 @@ class Donation(Base, PKMixin, TimestampMixin):
 
     __tablename__ = "donations"
     donor_id: Mapped[int | None] = mapped_column(ForeignKey("donors.id"), nullable=True, index=True)
+    # Which catalogue item was given, when the donor picked one. The item's name
+    # and rate are still copied onto the row below so the receipt is immutable.
+    feed_item_id: Mapped[int | None] = mapped_column(
+        ForeignKey("feed_items.id"), nullable=True, index=True
+    )
     donor_name: Mapped[str] = mapped_column(String(120))
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)

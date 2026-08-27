@@ -102,10 +102,14 @@ export const en = {
     contactHint: "A phone number or email lets us find your past donations and send your receipt.",
     estimatedValue: "Estimated contribution value:",
     estimatePending: "Enter a quantity to see what your contribution is worth.",
-    rateCardTitle: "How we value donated feed",
+    rateCardTitle: "Our feed and what it costs",
     rateCardText:
-      "Indicative farm-gate rates used on your receipt. Nothing is charged — this only records what your gift is worth.",
+      "The farm's own list of feed and current rates. Your receipt uses these figures. Nothing is charged — this only records what your gift is worth.",
     contributionValued: "Your feed contribution is valued at",
+    category: "Category",
+    notListed: "➕ Something else (not on the list)",
+    notListedHint:
+      "Tell us what you would like to give and our team will price it when they collect it.",
     showPublicly: "Show my name on the donors wall",
     showPubliclyHint:
       "Only your name and how many times you have donated are shown — never your phone, email or amount. Leave this unticked to stay anonymous. You can ask us to remove your name at any time.",
@@ -148,6 +152,7 @@ export const en = {
     dashboard: "Dashboard",
     owners: "Owners",
     cattle: "Cattle",
+    feed: "Feed",
     donations: "Donations",
     donors: "Donors",
     welcome: "Welcome, {{name}}",
@@ -311,6 +316,34 @@ export const en = {
     homeText:
       "{{donors}} donors have given {{donations}} donations of fodder, grass and feed to our herd.",
     seeAll: "See all donors",
+  },
+  feed: {
+    title: "Feed Catalogue",
+    subtitle: "{{count}} item(s) · {{active}} on the donate form",
+    addTitle: "Add feed item",
+    editTitle: "Edit feed item",
+    name: "Feed name",
+    category: "Category",
+    unit: "Sold by",
+    rate: "Cost (₹ per unit)",
+    rateHint: "What one unit of this feed costs the farm.",
+    ratePreview: "{{amount}} per {{unit}}",
+    notes: "Notes",
+    isActive: "Show on the public donate form",
+    isActiveHint:
+      "Retired items stay here and on past receipts, but donors can no longer choose them.",
+    allCategories: "All categories",
+    colItem: "Feed item",
+    colCost: "Cost",
+    active: "On form",
+    retired: "Retired",
+    retireHint: "Retire this item — it disappears from the donate form.",
+    restoreHint: "Put this item back on the donate form.",
+    deleteConfirm: "Remove \"{{name}}\" from the catalogue?",
+    empty: "No feed items yet. Add one so donors have something to choose.",
+    saveFailed: "Could not save this feed item.",
+    rateNote:
+      "These rates price every donation and print on the donor's receipt. Changing a rate affects future donations only — receipts already issued keep the rate they were created with.",
   },
 };
 

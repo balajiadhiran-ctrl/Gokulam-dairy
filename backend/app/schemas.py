@@ -178,10 +178,50 @@ DONATION_TYPE_RE = "^(green_fodder|dry_grass|hay|feed|mineral|other)$"
 UNIT_RE = "^(kg|quintal|bag|bundle|piece)$"
 
 
+# ---- Feed catalogue (what the cattle eat and what it costs) --------------
+class FeedItemBase(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    name_hi: str | None = Field(default=None, max_length=120)
+    name_ta: str | None = Field(default=None, max_length=120)
+    category: str = Field(pattern=DONATION_TYPE_RE)
+    unit: str = Field(pattern=UNIT_RE)
+    rate: Decimal = Field(ge=0, le=Decimal("1000000"))  # ₹ per unit
+    notes: str | None = Field(default=None, max_length=500)
+    is_active: bool = True
+
+
+class FeedItemCreate(FeedItemBase):
+    """`feed_code` is generated from the row id unless one is supplied."""
+    feed_code: str | None = Field(default=None, max_length=32)
+
+
+class FeedItemUpdate(BaseModel):
+    # PATCH semantics — only the fields sent are changed.
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    name_hi: str | None = Field(default=None, max_length=120)
+    name_ta: str | None = Field(default=None, max_length=120)
+    category: str | None = Field(default=None, pattern=DONATION_TYPE_RE)
+    unit: str | None = Field(default=None, pattern=UNIT_RE)
+    rate: Decimal | None = Field(default=None, ge=0, le=Decimal("1000000"))
+    notes: str | None = Field(default=None, max_length=500)
+    is_active: bool | None = None
+
+
+class FeedItemOut(FeedItemBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    feed_code: str
+    created_at: datetime
+
+
+# ---- Donations -----------------------------------------------------------
 class DonationCreate(BaseModel):
     donor_name: str = Field(min_length=1, max_length=120)
     phone: str | None = Field(default=None, max_length=20)
     email: EmailStr | None = None
+    # Either pick a catalogue item, or describe it yourself with a type + item
+    # name. A catalogue item supplies the category, unit and rate.
+    feed_item_id: int | None = None
     donation_type: str = Field(pattern=DONATION_TYPE_RE)
     item: str | None = Field(default=None, max_length=160)
     # Structured quantity drives the receipt total; `quantity` is the display
@@ -200,6 +240,7 @@ class DonationOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     donor_id: int | None = None
+    feed_item_id: int | None = None
     donor_name: str
     phone: str | None = None
     email: str | None = None
@@ -225,6 +266,7 @@ class DonationStatusUpdate(BaseModel):
 
     status: str | None = Field(default=None, pattern="^(new|acknowledged|received)$")
     item: str | None = Field(default=None, max_length=160)
+    feed_item_id: int | None = None
     quantity_value: Decimal | None = Field(default=None, gt=0, le=Decimal("100000"))
     unit: str | None = Field(default=None, pattern=UNIT_RE)
     unit_rate: Decimal | None = Field(default=None, ge=0, le=Decimal("1000000"))

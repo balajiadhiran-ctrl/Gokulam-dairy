@@ -9,6 +9,7 @@ import { OwnerDetail } from "./pages/OwnerDetail";
 import { AllCattle } from "./pages/AllCattle";
 import { Donations } from "./pages/Donations";
 import { Donors } from "./pages/Donors";
+import { FeedCatalogue } from "./pages/FeedCatalogue";
 // Public marketing site / portfolio
 import { PublicLayout } from "./public/PublicLayout";
 import { Home } from "./public/Home";
@@ -83,6 +84,14 @@ export default function App() {
               element={
                 <ProtectedRoute permission="donors.read">
                   <Donors />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="feed"
+              element={
+                <ProtectedRoute permission="feed.read">
+                  <FeedCatalogue />
                 </ProtectedRoute>
               }
             />

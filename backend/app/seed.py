@@ -16,6 +16,7 @@ from app.models import (
     Cattle,
     Donation,
     Donor,
+    FeedItem,
     MilkProduction,
     Owner,
     Permission,
@@ -49,7 +50,15 @@ PERMISSIONS = [
     ("donations.update", "donations"),
     ("donors.read", "donors"),
     ("donors.update", "donors"),
+    ("feed.read", "feed"),
+    ("feed.create", "feed"),
+    ("feed.update", "feed"),
+    ("feed.delete", "feed"),
 ]
+
+# Maintaining the feed catalogue and its costs is a Super Admin / Admin job.
+# Everyone else can read it so they can see what the cattle are being fed.
+FEED_CRUD = ["feed.read", "feed.create", "feed.update", "feed.delete"]
 
 # Owners + cattle full CRUD — shared by Super Admin and Admin.
 OWNER_CATTLE_CRUD = [
@@ -65,9 +74,12 @@ ROLES = {
     # Super Admin: everything, including future user/RBAC/settings management.
     "super-admin": ("Super Admin", "*"),
     # Admin: manage owners and their cattle (add owners + full cattle CRUD).
-    "admin": ("Admin", OWNER_CATTLE_CRUD),
-    "farm-manager": ("Farm Manager", OWNER_CATTLE_CRUD + ["milk.read", "milk.create", "milk.update"]),
-    "staff": ("Staff", ["cattle.read", "milk.read", "milk.create"]),
+    "admin": ("Admin", OWNER_CATTLE_CRUD + FEED_CRUD),
+    "farm-manager": (
+        "Farm Manager",
+        OWNER_CATTLE_CRUD + ["milk.read", "milk.create", "milk.update", "feed.read"],
+    ),
+    "staff": ("Staff", ["cattle.read", "milk.read", "milk.create", "feed.read"]),
     "owner": ("Owner", ["dashboard.read", "owners.read", "cattle.read", "milk.read"]),
 }
 
@@ -80,6 +92,7 @@ def seed() -> None:
         _seed_rbac(db)
         _seed_users(db)
         _seed_farm(db)
+        _seed_feed_catalogue(db)
         _seed_donations(db)
         _backfill_donors(db)
         db.commit()
@@ -103,6 +116,7 @@ def _add_missing_columns() -> None:
             ("unit", "VARCHAR(16)"),
             ("unit_rate", "NUMERIC(10, 2)"),
             ("amount", "NUMERIC(12, 2)"),
+            ("feed_item_id", "INTEGER"),
         ],
         "donors": [
             ("show_publicly", "BOOLEAN DEFAULT 0 NOT NULL"),
@@ -240,6 +254,43 @@ def _seed_farm(db: Session) -> None:
                     recorded_by=staff.id if staff else None,
                 )
             )
+
+
+# Starter catalogue, matching the indicative rates in app/core/rates.py.
+# (name, hi, ta, category, unit, rate)
+FEED_CATALOGUE = [
+    ("Napier Grass", "नेपियर घास", "நேப்பியர் புல்", "green_fodder", "kg", "8"),
+    ("Co-4 Fodder", "सीओ-4 चारा", "கோ-4 தீவனம்", "green_fodder", "kg", "9"),
+    ("Maize Fodder", "मक्का चारा", "மக்காச்சோள தீவனம்", "green_fodder", "kg", "7"),
+    ("Dry Fodder Bundle", "सूखा चारा गट्ठर", "உலர் தீவனக் கட்டு", "dry_grass", "bundle", "200"),
+    ("Paddy Straw Hay", "पुआल भूसा", "நெல் வைக்கோல்", "hay", "bag", "750"),
+    ("Cattle Feed Pellets", "पशु आहार दाना", "கால்நடை தீவன உருண்டை", "feed", "bag", "1600"),
+    ("Cotton Seed Cake", "बिनौला खली", "பருத்திக் கொட்டைப் பிண்ணாக்கு", "feed", "kg", "38"),
+    ("Mineral Mixture", "खनिज मिश्रण", "தாது கலவை", "mineral", "kg", "120"),
+    ("Salt Lick", "नमक चाटन", "உப்பு கட்டி", "mineral", "piece", "45"),
+]
+
+
+def _seed_feed_catalogue(db: Session) -> None:
+    """Starter feed items so the donate form has real options on a fresh
+    install. Staff edit these — and the costs — in the admin ERP."""
+    if db.scalar(select(FeedItem).limit(1)):
+        return
+    for i, (name, hi, ta, category, unit, rate) in enumerate(FEED_CATALOGUE, start=1):
+        db.add(
+            FeedItem(
+                feed_code=f"FEED-{i:03d}",
+                name=name,
+                name_hi=hi,
+                name_ta=ta,
+                category=category,
+                unit=unit,
+                rate=Decimal(rate),
+                is_active=True,
+            )
+        )
+    db.flush()
+    print(f"  seeded {len(FEED_CATALOGUE)} feed items")
 
 
 def _backfill_donors(db: Session) -> None:

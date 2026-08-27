@@ -21,6 +21,7 @@ An installable **PWA** with two faces sharing one backend:
 | Public website — Home, Gallery, Donate, Contact (responsive) | ✅ |
 | Cow/buffalo/farm imagery (free CC images in `public/images/`) | ✅ |
 | Donate Feed — public pledge form → `POST /donations` | ✅ |
+| Feed catalogue — CRUD of feed items and their cost (Super Admin / Admin) | ✅ |
 | Donation receipts — invoice-format thank-you with the contribution value | ✅ |
 | Donor registry — repeat donors matched, lifetime totals, searchable | ✅ |
 | Public donors wall — true donor count, names shown only with consent | ✅ |
@@ -97,7 +98,7 @@ docker run -p 8000:8000 gokulam    # → http://localhost:8000
   `/receipt/:token`
 - **Login**: `/login`
 - **Admin ERP**: `/admin` (Dashboard), `/admin/owners`, `/admin/cattle`,
-  `/admin/donations`, `/admin/donors`
+  `/admin/feed`, `/admin/donations`, `/admin/donors`
 
 ## Prerequisites
 
@@ -151,6 +152,9 @@ Open http://127.0.0.1:5173 — Vite proxies `/api` to the backend on 8000.
 1. **Owners** — cards with total/cow/buffalo counts and breed chips; add/edit/delete.
 2. **View cattle** on an owner — gallery; add cattle and **Add photo** (JPEG/PNG/WebP).
 3. **Cattle** — all animals, filterable by owner and type.
+3b. **Feed** — the feed catalogue: add, edit, retire or remove feed items and
+   set what each costs. Only Super Admin and Admin can change it; Managers and
+   Staff can read it.
 4. **Donations** — donor pledges with their receipt number and value; move them
    new → acknowledged → received, or price anything the rate card could not value.
 5. **Donors** — the registry: every donor with donation count, lifetime value and
@@ -171,12 +175,20 @@ from the admin **Donors** screen.
 ### Valuing in-kind donations
 
 No money changes hands — a donation is feed, not a payment. To thank donors with
-a figure, each feed type carries an indicative farm-gate rate per kilogram in
-`backend/app/core/rates.py`, and units convert to kilograms there too
-(1 bag = 50 kg, 1 bundle = 20 kg, 1 quintal = 100 kg). **Edit that file to match
-your farm's real rates.** Staff can override the rate on any individual donation
-from the admin screen. Receipts are labelled *Donation Receipt*, not tax
-invoices, and say plainly that nothing is payable.
+a figure, every donation is priced from the **feed catalogue** at
+`/admin/feed`: each item carries a category, the unit it is given in, and its
+cost per unit. The public donate form lists the active items, so a donor picks
+real feed at the farm's own rate and sees the value before submitting.
+
+The rate and item name are **copied onto the donation** when it is made, so
+editing a feed item later never rewrites a receipt that was already issued.
+Deleting an item that donations point at retires it instead of removing it.
+
+Feed the catalogue doesn't cover falls back to a per-kilogram rate card in
+`backend/app/core/rates.py` (with 1 bag = 50 kg, 1 bundle = 20 kg,
+1 quintal = 100 kg). Staff can also override the rate on any individual donation
+from the admin Donations screen. Receipts are labelled *Donation Receipt*, not
+tax invoices, and say plainly that nothing is payable.
 
 ## Production notes
 

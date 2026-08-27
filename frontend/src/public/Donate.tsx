@@ -1,41 +1,83 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { Reveal } from "../components/Reveal";
 import { DonationReceipt, ReceiptActions } from "./DonationReceipt";
 import { estimateValue, inr } from "../lib/money";
-import type { Donation, DonationUnit, RateCard, Receipt } from "../lib/types";
+import { useDataNames } from "../i18n/dataNames";
+import type {
+  Donation,
+  DonationType,
+  DonationUnit,
+  FeedItem,
+  RateCard,
+  Receipt,
+} from "../lib/types";
 import { DONATION_TYPE_VALUES, DONATION_UNITS, FARM } from "./content";
 
 const input =
   "w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition-all duration-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:-translate-y-0.5";
 
+/** Sentinel for "my feed isn't in the list" — falls back to free text. */
+const OTHER = "";
+
 export function Donate() {
   const { t } = useTranslation();
+  const { feedName } = useDataNames();
   const [form, setForm] = useState({
     donor_name: "",
     phone: "",
     email: "",
-    donation_type: "green_fodder",
+    donation_type: "green_fodder" as DonationType,
     item: "",
     quantity_value: "",
     unit: "kg" as DonationUnit,
     message: "",
   });
+  /** Catalogue item id as a string, or OTHER for the free-text path. */
+  const [feedItemId, setFeedItemId] = useState<string>(OTHER);
   // Off unless the donor asks for it — nobody is named on the wall by default.
   const [showPublicly, setShowPublicly] = useState(false);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [rateCard, setRateCard] = useState<RateCard>();
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
 
-  // The farm's valuation table, so the estimate below matches the receipt.
+  // The farm's own feed catalogue drives the options and the prices; the rate
+  // card is the fallback for anything not on it.
   useEffect(() => {
+    axios
+      .get<FeedItem[]>("/api/v1/feed-items")
+      .then(({ data }) => {
+        setFeedItems(data);
+        // Start on a real catalogue item rather than the free-text fallback.
+        if (data.length) setFeedItemId(String(data[0].id));
+      })
+      .catch(() => setFeedItems([]));
     axios
       .get<RateCard>("/api/v1/donations/rate-card")
       .then(({ data }) => setRateCard(data))
       .catch(() => setRateCard(undefined));
   }, []);
+
+  const chosen = useMemo(
+    () => feedItems.find((i) => String(i.id) === feedItemId) ?? null,
+    [feedItems, feedItemId],
+  );
+
+  // Group the catalogue by category for the <optgroup>s.
+  const grouped = useMemo(() => {
+    const byCategory = new Map<DonationType, FeedItem[]>();
+    for (const item of feedItems) {
+      const list = byCategory.get(item.category) ?? [];
+      list.push(item);
+      byCategory.set(item.category, list);
+    }
+    return DONATION_TYPE_VALUES.map((c) => [c, byCategory.get(c) ?? []] as const).filter(
+      ([, list]) => list.length > 0,
+    );
+  }, [feedItems]);
 
   const set =
     (k: keyof typeof form) =>
@@ -43,7 +85,16 @@ export function Donate() {
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const qty = form.quantity_value ? Number(form.quantity_value) : null;
-  const estimate = estimateValue(rateCard, form.donation_type, qty, form.unit);
+
+  // A catalogue item prices itself; free text falls back to the rate card.
+  const estimate = chosen
+    ? {
+        rate: Number(chosen.rate),
+        amount: qty && qty > 0 ? Math.round(qty * Number(chosen.rate) * 100) / 100 : null,
+      }
+    : estimateValue(rateCard, form.donation_type, qty, form.unit);
+
+  const activeUnit = chosen ? chosen.unit : form.unit;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,10 +105,13 @@ export function Donate() {
         donor_name: form.donor_name,
         phone: form.phone || null,
         email: form.email || null,
-        donation_type: form.donation_type,
-        item: form.item || null,
+        feed_item_id: chosen ? chosen.id : null,
+        // The server overwrites these from the catalogue item when one is
+        // picked; they carry the free-text path on their own otherwise.
+        donation_type: chosen ? chosen.category : form.donation_type,
+        item: chosen ? chosen.name : form.item || null,
         quantity_value: qty,
-        unit: qty ? form.unit : null,
+        unit: qty ? activeUnit : null,
         message: form.message || null,
         show_publicly: showPublicly,
       });
@@ -115,6 +169,7 @@ export function Donate() {
                 unit: "kg",
                 message: "",
               });
+              setFeedItemId(OTHER);
               setShowPublicly(false);
               setReceipt(null);
               setState("idle");
@@ -139,19 +194,28 @@ export function Donate() {
             <img src="/images/grass.jpg" alt="" className="h-52 w-full object-cover" />
           </div>
 
-          {/* What the farm values each feed type at — the same table the
-              receipt total is worked out from. */}
-          {rateCard && (
+          {/* The farm's actual feed list and what each item costs — the same
+              catalogue the form prices donations from. */}
+          {feedItems.length > 0 && (
             <div className="mt-6 rounded-2xl glass p-5">
               <h3 className="text-sm font-semibold text-slate-700">{t("donate.rateCardTitle")}</h3>
               <p className="mt-1 text-xs text-slate-500">{t("donate.rateCardText")}</p>
-              <ul className="mt-3 space-y-1 text-sm">
-                {DONATION_TYPE_VALUES.filter((v) => Number(rateCard.rate_per_kg[v]) > 0).map((v) => (
-                  <li key={v} className="flex items-center justify-between gap-3">
-                    <span className="text-slate-600">{t(`donate.types.${v}`)}</span>
-                    <span className="font-medium text-brand-700">
-                      {inr(rateCard.rate_per_kg[v])} / {t("donate.units.kg")}
-                    </span>
+              <ul className="mt-3 space-y-3">
+                {grouped.map(([category, list]) => (
+                  <li key={category}>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                      {t(`donate.types.${category}`)}
+                    </p>
+                    <ul className="mt-1 space-y-1 text-sm">
+                      {list.map((f) => (
+                        <li key={f.id} className="flex items-baseline justify-between gap-3">
+                          <span className="text-slate-600">{feedName(f)}</span>
+                          <span className="whitespace-nowrap font-medium text-brand-700">
+                            {inr(f.rate)} / {t(`donate.units.${f.unit}`)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
               </ul>
@@ -192,23 +256,56 @@ export function Donate() {
             </div>
             <p className="text-[11px] text-slate-400">{t("donate.contactHint")}</p>
 
+            {/* Pick real feed from the farm's catalogue. */}
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-slate-600">{t("donate.whatDonate")} *</span>
-              <select className={input} value={form.donation_type} onChange={set("donation_type")}>
-                {DONATION_TYPE_VALUES.map((v) => (
-                  <option key={v} value={v}>
-                    {t(`donate.types.${v}`)}
-                  </option>
+              <select
+                className={input}
+                value={feedItemId}
+                onChange={(e) => setFeedItemId(e.target.value)}
+              >
+                {grouped.map(([category, list]) => (
+                  <optgroup key={category} label={t(`donate.types.${category}`)}>
+                    {list.map((f) => (
+                      <option key={f.id} value={String(f.id)}>
+                        {feedName(f)} — {inr(f.rate)} / {t(`donate.units.${f.unit}`)}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
+                <option value={OTHER}>{t("donate.notListed")}</option>
               </select>
             </label>
 
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-600">{t("donate.itemDetails")}</span>
-              <input className={input} value={form.item} onChange={set("item")} placeholder={t("donate.itemPlaceholder")} />
-            </label>
+            {/* Free-text path for feed the farm hasn't catalogued. */}
+            {!chosen && (
+              <div className="a-slide-down space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                <p className="text-[11px] text-slate-500">{t("donate.notListedHint")}</p>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-slate-600">{t("donate.category")}</span>
+                  <select className={input} value={form.donation_type} onChange={set("donation_type")}>
+                    {DONATION_TYPE_VALUES.map((v) => (
+                      <option key={v} value={v}>
+                        {t(`donate.types.${v}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-slate-600">
+                    {t("donate.itemDetails")}
+                  </span>
+                  <input
+                    className={input}
+                    value={form.item}
+                    onChange={set("item")}
+                    placeholder={t("donate.itemPlaceholder")}
+                  />
+                </label>
+              </div>
+            )}
 
-            {/* Structured quantity — this is what the receipt total is built from. */}
+            {/* Quantity — the unit comes from the catalogue item when there is one. */}
             <div className="grid grid-cols-[1fr_9rem] gap-3">
               <label className="block text-sm">
                 <span className="mb-1 block font-medium text-slate-600">{t("donate.quantity")}</span>
@@ -225,13 +322,19 @@ export function Donate() {
               </label>
               <label className="block text-sm">
                 <span className="mb-1 block font-medium text-slate-600">{t("donate.unit")}</span>
-                <select className={input} value={form.unit} onChange={set("unit")}>
-                  {DONATION_UNITS.map((u) => (
-                    <option key={u} value={u}>
-                      {t(`donate.units.${u}`)}
-                    </option>
-                  ))}
-                </select>
+                {chosen ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-600">
+                    {t(`donate.units.${chosen.unit}`)}
+                  </div>
+                ) : (
+                  <select className={input} value={form.unit} onChange={set("unit")}>
+                    {DONATION_UNITS.map((u) => (
+                      <option key={u} value={u}>
+                        {t(`donate.units.${u}`)}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </label>
             </div>
 
@@ -248,7 +351,7 @@ export function Donate() {
                   <span className="font-medium">{t("donate.estimatedValue")}</span>{" "}
                   <span className="font-extrabold">{inr(estimate.amount)}</span>
                   <span className="block text-[11px] opacity-80">
-                    {form.quantity_value} {t(`donate.units.${form.unit}`)} × {inr(estimate.rate)}
+                    {form.quantity_value} {t(`donate.units.${activeUnit}`)} × {inr(estimate.rate)}
                   </span>
                 </>
               ) : (
