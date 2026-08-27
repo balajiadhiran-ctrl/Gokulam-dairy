@@ -73,3 +73,348 @@ select,
 textarea {
   background-color: rgba(255, 255, 255, 0.65);
 }
+
+/* ==========================================================================
+   Motion layer — keyframes + animation utilities used across the public site.
+   Everything here is CSS-driven (no animation library); JS only toggles the
+   `.is-visible` class for scroll reveals. Honour prefers-reduced-motion at the
+   bottom of this file.
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes gk-fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gk-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes gk-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gk-slide-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Slow cinematic push-in on the hero photo. */
+@keyframes gk-ken-burns {
+  0% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.16) translate3d(-1.6%, -1.4%, 0);
+  }
+  100% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+}
+/* Drift for the blurred background blobs. */
+@keyframes gk-blob-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(2.5%, -2%, 0) scale(1.07);
+  }
+  66% {
+    transform: translate3d(-2.5%, 2%, 0) scale(0.95);
+  }
+}
+@keyframes gk-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+  }
+}
+@keyframes gk-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-4px) rotate(-7deg);
+  }
+  60% {
+    transform: translateY(-1px) rotate(5deg);
+  }
+}
+/* Light sweep across glass cards on hover. */
+@keyframes gk-sheen {
+  from {
+    transform: translateX(-130%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(240%) skewX(-18deg);
+  }
+}
+@keyframes gk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes gk-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(240, 192, 64, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(240, 192, 64, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(240, 192, 64, 0);
+  }
+}
+@keyframes gk-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.14) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+@keyframes gk-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes gk-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---- Entrance animations (fire immediately on mount) ---- */
+.a-fade-up {
+  animation: gk-fade-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.a-fade-in {
+  animation: gk-fade-in 0.7s ease-out both;
+}
+.a-zoom-in {
+  animation: gk-zoom-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.a-slide-down {
+  animation: gk-slide-down 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.a-burst {
+  animation: gk-burst 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.a-float {
+  animation: gk-float 7s ease-in-out infinite;
+}
+.a-spin {
+  animation: gk-spin 0.8s linear infinite;
+}
+.a-pulse-ring {
+  animation: gk-pulse-ring 2.4s ease-out infinite;
+}
+.a-ken-burns {
+  animation: gk-ken-burns 26s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Delay steps for staggering groups of entrance animations. */
+.d-1 { animation-delay: 0.08s; }
+.d-2 { animation-delay: 0.16s; }
+.d-3 { animation-delay: 0.24s; }
+.d-4 { animation-delay: 0.32s; }
+.d-5 { animation-delay: 0.4s; }
+.d-6 { animation-delay: 0.48s; }
+
+/* ---- Scroll reveal (JS adds .is-visible when the element enters view) ---- */
+.reveal {
+  opacity: 0;
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-up { transform: translate3d(0, 34px, 0); }
+.reveal-left { transform: translate3d(-40px, 0, 0); }
+.reveal-right { transform: translate3d(40px, 0, 0); }
+.reveal-zoom { transform: scale(0.92); filter: blur(4px); }
+.reveal-fade { transform: none; }
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* ---- Hover micro-interactions ---- */
+.hover-lift {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 48px rgba(31, 41, 80, 0.22);
+}
+.press {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), filter 0.18s ease;
+}
+.press:hover { transform: translateY(-2px); }
+.press:active { transform: translateY(1px) scale(0.985); }
+
+/* Diagonal light sweep — put on a position:relative, overflow:hidden element. */
+.sheen {
+  position: relative;
+  overflow: hidden;
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-130%) skewX(-18deg);
+  pointer-events: none;
+  opacity: 0;
+}
+.sheen:hover::after {
+  opacity: 1;
+  animation: gk-sheen 0.9s ease-out;
+}
+
+/* Image that slowly zooms while its container is hovered. */
+.zoom-parent img {
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), filter 0.7s ease;
+}
+.zoom-parent:hover img {
+  transform: scale(1.08);
+  filter: saturate(1.1);
+}
+
+/* Animated underline for nav links. */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-brand-500), var(--color-gold-400));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-link:hover::after,
+.nav-link.is-active::after {
+  transform: scaleX(1);
+}
+
+/* Header condenses once the page is scrolled. */
+.nav-shell {
+  transition: padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.is-scrolled .nav-shell {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+.site-header {
+  transition: box-shadow 0.35s ease, background-color 0.35s ease;
+}
+.site-header.is-scrolled {
+  box-shadow: 0 10px 30px rgba(31, 41, 80, 0.12);
+}
+
+/* Route change transition for the page body. */
+.a-page {
+  animation: gk-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Gold shimmer for the "eyebrow" line above the hero title. */
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--color-gold-400) 0%,
+    #fff6d8 20%,
+    var(--color-gold-400) 40%,
+    var(--color-gold-400) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gk-shimmer 5s linear infinite;
+}
+
+/* Animate the ambient blobs already defined on body::before. */
+body::before {
+  animation: gk-blob-drift 24s ease-in-out infinite;
+}
+
+/* Logo reacts on hover. */
+.logo-mark {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+a:hover > .logo-mark,
+.logo-link:hover .logo-mark {
+  animation: gk-bob 0.7s ease-in-out;
+}
+
+/* ---- Accessibility: respect the OS "reduce motion" setting ---- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}

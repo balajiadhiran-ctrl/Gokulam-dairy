@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -14,6 +14,7 @@ export function Layout() {
   const { t } = useTranslation();
   const { user, permissions, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const visible = NAV.filter((n) => permissions.includes(n.permission));
 
   return (
@@ -24,25 +25,26 @@ export function Layout() {
           <span className="text-gold-400">🐄</span> GOKULAM
         </div>
         <nav className="mt-2 flex-1 space-y-0.5 px-2">
-          {visible.map((n) => (
+          {visible.map((n, i) => (
             <NavLink
               key={n.to}
               to={n.to}
               end={n.end}
+              style={{ animationDelay: `${i * 60}ms` }}
               className={({ isActive }) =>
-                `flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+                `a-fade-up group flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-300 hover:translate-x-1 ${
                   isActive ? "bg-white/15 font-medium" : "text-white/80 hover:bg-white/10"
                 }`
               }
             >
-              <span className="text-gold-400">▸</span>
+              <span className="text-gold-400 transition-transform duration-300 group-hover:translate-x-0.5">▸</span>
               {t(n.key)}
             </NavLink>
           ))}
         </nav>
         <a
           href="/"
-          className="mx-2 mb-1 rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+          className="mx-2 mb-1 rounded-lg px-3 py-2 text-sm text-white/80 transition-all duration-300 hover:translate-x-1 hover:bg-white/10"
         >
           ↗ {t("common.viewPublicSite")}
         </a>
@@ -64,7 +66,7 @@ export function Layout() {
                 logout();
                 navigate("/login");
               }}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              className="press rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
             >
               {t("common.signOut")}
             </button>
@@ -79,7 +81,7 @@ export function Layout() {
               to={n.to}
               end={n.end}
               className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-1.5 text-xs ${
+                `press whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition ${
                   isActive ? "bg-brand-100 font-medium text-brand-700" : "text-slate-500"
                 }`
               }
@@ -89,7 +91,8 @@ export function Layout() {
           ))}
         </nav>
 
-        <main className="flex-1 overflow-auto p-4 sm:p-6">
+        {/* Keyed on the path so each admin screen fades in on navigation. */}
+        <main key={location.pathname} className="a-page flex-1 overflow-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
+import { Reveal } from "../components/Reveal";
 import { DONATION_TYPE_VALUES, FARM } from "./content";
 
 const input =
-  "w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
+  "w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition-all duration-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:-translate-y-0.5";
 
 export function Donate() {
   const { t } = useTranslation();
@@ -49,17 +50,17 @@ export function Donate() {
   if (state === "done") {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <div className="text-6xl">🙏🌿</div>
-        <h1 className="mt-4 text-3xl font-bold text-slate-800">
+        <div className="a-burst text-6xl">🙏🌿</div>
+        <h1 className="a-fade-up d-2 mt-4 text-3xl font-bold text-slate-800">
           {t("donate.thankYouTitle", { name: form.donor_name.split(" ")[0] })}
         </h1>
-        <p className="mt-3 text-slate-600">{t("donate.thankYouText")}</p>
+        <p className="a-fade-up d-3 mt-3 text-slate-600">{t("donate.thankYouText")}</p>
         <button
           onClick={() => {
             setForm({ donor_name: "", phone: "", email: "", donation_type: "green_fodder", item: "", quantity: "", message: "" });
             setState("idle");
           }}
-          className="mt-6 rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700"
+          className="a-fade-up d-4 press mt-6 rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700"
         >
           {t("donate.another")}
         </button>
@@ -70,11 +71,13 @@ export function Donate() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
       <div className="grid gap-10 md:grid-cols-2">
-        <div>
-          <span className="text-4xl">🌿🌾🥣</span>
+        <Reveal from="left">
+          <span className="a-float inline-block text-4xl">🌿🌾🥣</span>
           <h1 className="mt-3 text-3xl font-bold text-slate-800">{t("donate.pitchTitle")}</h1>
           <p className="mt-3 text-slate-600">{t("donate.pitchText")}</p>
-          <img src="/images/grass.jpg" alt="" className="mt-6 h-52 w-full rounded-2xl object-cover shadow" />
+          <div className="zoom-parent mt-6 overflow-hidden rounded-2xl shadow">
+            <img src="/images/grass.jpg" alt="" className="h-52 w-full object-cover" />
+          </div>
           <div className="mt-6 rounded-2xl bg-brand-50 p-5 text-sm text-slate-600">
             <p className="font-semibold text-brand-700">{t("donate.preferTalk")}</p>
             <p className="mt-1">📞 {FARM.phone}</p>
@@ -82,65 +85,76 @@ export function Donate() {
               href={`https://wa.me/${FARM.whatsapp}?text=I%20would%20like%20to%20donate%20feed%20to%20the%20cattle`}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-block rounded-lg bg-green-500 px-4 py-2 font-medium text-white"
+              className="press mt-2 inline-block rounded-lg bg-green-500 px-4 py-2 font-medium text-white"
             >
               {t("donate.chatWhatsApp")}
             </a>
           </div>
-        </div>
+        </Reveal>
 
-        <form onSubmit={submit} className="space-y-3 rounded-2xl glass p-6">
-          <h2 className="font-semibold text-slate-800">{t("donate.formTitle")}</h2>
+        <Reveal from="right" delay={120}>
+          <form onSubmit={submit} className="space-y-3 rounded-2xl glass p-6">
+            <h2 className="font-semibold text-slate-800">{t("donate.formTitle")}</h2>
 
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-600">{t("donate.name")} *</span>
-            <input className={input} value={form.donor_name} onChange={set("donor_name")} required />
-          </label>
-          <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-600">{t("donate.phone")}</span>
-              <input className={input} value={form.phone} onChange={set("phone")} />
+              <span className="mb-1 block font-medium text-slate-600">{t("donate.name")} *</span>
+              <input className={input} value={form.donor_name} onChange={set("donor_name")} required />
             </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-slate-600">{t("donate.phone")}</span>
+                <input className={input} value={form.phone} onChange={set("phone")} />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-slate-600">{t("donate.email")}</span>
+                <input className={input} type="email" value={form.email} onChange={set("email")} />
+              </label>
+            </div>
+
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-600">{t("donate.email")}</span>
-              <input className={input} type="email" value={form.email} onChange={set("email")} />
+              <span className="mb-1 block font-medium text-slate-600">{t("donate.whatDonate")} *</span>
+              <select className={input} value={form.donation_type} onChange={set("donation_type")}>
+                {DONATION_TYPE_VALUES.map((v) => (
+                  <option key={v} value={v}>
+                    {t(`donate.types.${v}`)}
+                  </option>
+                ))}
+              </select>
             </label>
-          </div>
 
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-600">{t("donate.whatDonate")} *</span>
-            <select className={input} value={form.donation_type} onChange={set("donation_type")}>
-              {DONATION_TYPE_VALUES.map((v) => (
-                <option key={v} value={v}>
-                  {t(`donate.types.${v}`)}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-slate-600">{t("donate.itemDetails")}</span>
+                <input className={input} value={form.item} onChange={set("item")} placeholder={t("donate.itemPlaceholder")} />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-slate-600">{t("donate.quantity")}</span>
+                <input className={input} value={form.quantity} onChange={set("quantity")} placeholder={t("donate.quantityPlaceholder")} />
+              </label>
+            </div>
 
-          <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-600">{t("donate.itemDetails")}</span>
-              <input className={input} value={form.item} onChange={set("item")} placeholder={t("donate.itemPlaceholder")} />
+              <span className="mb-1 block font-medium text-slate-600">{t("donate.message")}</span>
+              <textarea className={input} rows={3} value={form.message} onChange={set("message")} />
             </label>
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-600">{t("donate.quantity")}</span>
-              <input className={input} value={form.quantity} onChange={set("quantity")} placeholder={t("donate.quantityPlaceholder")} />
-            </label>
-          </div>
 
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-600">{t("donate.message")}</span>
-            <textarea className={input} rows={3} value={form.message} onChange={set("message")} />
-          </label>
+            {state === "error" && (
+              <div className="a-slide-down rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>
+            )}
 
-          {state === "error" && <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
-
-          <button type="submit" disabled={state === "sending"} className="w-full rounded-lg bg-gold-500 py-3 font-semibold text-white hover:brightness-95 disabled:opacity-60">
-            {state === "sending" ? t("donate.sending") : t("donate.pledgeBtn")}
-          </button>
-          <p className="text-center text-[11px] text-slate-400">{t("donate.noPayment")}</p>
-        </form>
+            <button
+              type="submit"
+              disabled={state === "sending"}
+              className="press flex w-full items-center justify-center gap-2 rounded-lg bg-gold-500 py-3 font-semibold text-white hover:brightness-95 disabled:opacity-60"
+            >
+              {state === "sending" && (
+                <span className="a-spin inline-block h-4 w-4 rounded-full border-2 border-white/40 border-t-white" />
+              )}
+              {state === "sending" ? t("donate.sending") : t("donate.pledgeBtn")}
+            </button>
+            <p className="text-center text-[11px] text-slate-400">{t("donate.noPayment")}</p>
+          </form>
+        </Reveal>
       </div>
     </div>
   );
