@@ -16,10 +16,42 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_permission
 from app.db.session import get_db
 from app.models import Donation, Donor, User
-from app.schemas import DonorDetail, DonorSummary, DonorUpdate
+from app.schemas import DonorDetail, DonorSummary, DonorUpdate, DonorWall, WallDonor
 from app.services.donations import normalise_email, normalise_name, normalise_phone
 
 router = APIRouter(prefix="/donors", tags=["donors"])
+
+
+@router.get("/wall", response_model=DonorWall)
+def donor_wall(db: Session = Depends(get_db)) -> DonorWall:
+    """Public thank-you wall for the marketing site.
+
+    The two totals cover every donor on the register — a count names nobody, so
+    it can be honest. `listed` contains only donors who ticked the consent box
+    when they pledged, ordered by how often they have given.
+    """
+    donors = list(db.scalars(select(Donor).where(Donor.deleted_at.is_(None))))
+    counts = dict(
+        db.execute(
+            select(Donation.donor_id, func.count(Donation.id))
+            .where(Donation.donor_id.isnot(None))
+            .group_by(Donation.donor_id)
+        ).all()
+    )
+
+    listed = sorted(
+        (
+            WallDonor(name=d.name, donation_count=counts.get(d.id, 0))
+            for d in donors
+            if d.show_publicly and d.status == "active"
+        ),
+        key=lambda w: (-w.donation_count, w.name.lower()),
+    )
+    return DonorWall(
+        total_donors=len(donors),
+        total_donations=sum(counts.values()),
+        listed=listed,
+    )
 
 
 @router.get("", response_model=list[DonorSummary])
@@ -129,7 +161,7 @@ def _summarise(
             c: getattr(donor, c)
             for c in (
                 "id", "donor_code", "name", "phone", "email",
-                "address", "notes", "status", "created_at",
+                "address", "notes", "status", "show_publicly", "created_at",
             )
         },
         donation_count=len(rows),

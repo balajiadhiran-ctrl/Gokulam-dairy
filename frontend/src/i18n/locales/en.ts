@@ -26,6 +26,7 @@ export const en = {
     home: "Home",
     gallery: "Gallery",
     donate: "Donate",
+    donors: "Donors",
     contact: "Contact",
     donateFeed: "Donate Feed",
     login: "Login",
@@ -105,6 +106,9 @@ export const en = {
     rateCardText:
       "Indicative farm-gate rates used on your receipt. Nothing is charged — this only records what your gift is worth.",
     contributionValued: "Your feed contribution is valued at",
+    showPublicly: "Show my name on the donors wall",
+    showPubliclyHint:
+      "Only your name and how many times you have donated are shown — never your phone, email or amount. Leave this unticked to stay anonymous. You can ask us to remove your name at any time.",
     units: {
       kg: "kg",
       quintal: "quintal",
@@ -253,6 +257,11 @@ export const en = {
     colTotal: "Total value",
     colReceived: "Received",
     colLast: "Last donation",
+    colListed: "On wall",
+    listed: "Listed",
+    notListed: "Private",
+    listHint: "Add this donor's name to the public wall (only with their permission).",
+    unlistHint: "Remove this donor's name from the public wall.",
     history: "Donation history",
     empty: "No donors yet. They are added automatically when a pledge arrives.",
     noMatches: "No donors match that search.",
@@ -282,6 +291,26 @@ export const en = {
     openLink: "Open receipt link",
     notFoundTitle: "Receipt not found",
     notFoundText: "This receipt link is not valid. Check the link, or make a new pledge.",
+  },
+  donorsWall: {
+    title: "Our Donors",
+    subtitle:
+      "The people whose generosity feeds our cows, buffaloes and calves every single day.",
+    statDonors: "Kind donors",
+    statDonations: "Donations",
+    namesTitle: "Thank you",
+    namesNote: "Listed with their permission.",
+    donationCount_one: "{{count}} donation",
+    donationCount_other: "{{count}} donations",
+    emptyNames:
+      "No donor has asked to be named yet. Every donation still counts towards the totals above.",
+    consentNote:
+      "Donors are named here only if they tick the box on the donation form. We never publish phone numbers, email addresses or amounts. If you would like your name added or removed, just contact the farm.",
+    joinCta: "Donate feed 🌿",
+    homeTitle: "Fed by kind hearts",
+    homeText:
+      "{{donors}} donors have given {{donations}} donations of fodder, grass and feed to our herd.",
+    seeAll: "See all donors",
   },
 };
 

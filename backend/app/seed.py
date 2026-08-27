@@ -104,6 +104,9 @@ def _add_missing_columns() -> None:
             ("unit_rate", "NUMERIC(10, 2)"),
             ("amount", "NUMERIC(12, 2)"),
         ],
+        "donors": [
+            ("show_publicly", "BOOLEAN DEFAULT 0 NOT NULL"),
+        ],
     }
     inspector = inspect(engine)
     with engine.begin() as conn:
@@ -277,8 +280,14 @@ def _seed_donations(db: Session) -> None:
          "green_fodder", "Maize fodder", 250, "kg", 31, "received"),
     ]
 
+    # Demo donors who agreed to be named on the public wall. Everyone else
+    # stays unlisted, which is what a real register looks like.
+    consenting = {"Anitha Ramesh", "Devi Textiles Trust", "Lakshmi Ammal", "Suresh Kumar"}
+
     for name, phone, email, dtype, item, qty, unit, days_ago, status in samples:
         donor = find_or_create_donor(db, name=name, phone=phone, email=email)
+        if name in consenting:
+            donor.show_publicly = True
         fy = financial_year()
         created = datetime.now() - timedelta(days=days_ago, hours=rng.randint(0, 20))
         d = Donation(

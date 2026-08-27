@@ -161,6 +161,8 @@ export interface DonationInput {
   quantity_value?: number | null;
   unit?: DonationUnit | null;
   message?: string | null;
+  /** Donor asked to be named on the public wall. Only ever opts in. */
+  show_publicly?: boolean;
 }
 
 export interface DonationUpdate {
@@ -201,6 +203,7 @@ export interface Donor {
   address: string | null;
   notes: string | null;
   status: string;
+  show_publicly: boolean;
   created_at: string;
 }
 
@@ -222,4 +225,19 @@ export interface DonorUpdate {
   address?: string | null;
   notes?: string | null;
   status?: string;
+  show_publicly?: boolean;
+}
+
+/** One name on the public thank-you wall — no contact details, no amounts. */
+export interface WallDonor {
+  name: string;
+  donation_count: number;
+}
+
+export interface DonorWall {
+  /** Everyone on the register: a count names nobody, so it is the true total. */
+  total_donors: number;
+  total_donations: number;
+  /** Only the donors who consented to being named. */
+  listed: WallDonor[];
 }

@@ -22,6 +22,8 @@ export function Donate() {
     unit: "kg" as DonationUnit,
     message: "",
   });
+  // Off unless the donor asks for it — nobody is named on the wall by default.
+  const [showPublicly, setShowPublicly] = useState(false);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
@@ -57,6 +59,7 @@ export function Donate() {
         quantity_value: qty,
         unit: qty ? form.unit : null,
         message: form.message || null,
+        show_publicly: showPublicly,
       });
       if (data.public_token) {
         const { data: full } = await axios.get<Receipt>(
@@ -112,6 +115,7 @@ export function Donate() {
                 unit: "kg",
                 message: "",
               });
+              setShowPublicly(false);
               setReceipt(null);
               setState("idle");
             }}
@@ -255,6 +259,22 @@ export function Donate() {
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-slate-600">{t("donate.message")}</span>
               <textarea className={input} rows={3} value={form.message} onChange={set("message")} />
+            </label>
+
+            {/* Opt-in to the public donors wall. Unticked by default. */}
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 bg-white/60 px-3 py-2.5 text-sm transition hover:border-brand-300">
+              <input
+                type="checkbox"
+                checked={showPublicly}
+                onChange={(e) => setShowPublicly(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600"
+              />
+              <span>
+                <span className="font-medium text-slate-700">{t("donate.showPublicly")}</span>
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-400">
+                  {t("donate.showPubliclyHint")}
+                </span>
+              </span>
             </label>
 
             {state === "error" && (

@@ -16,6 +16,7 @@ import { Gallery } from "./public/Gallery";
 import { Donate } from "./public/Donate";
 import { Contact } from "./public/Contact";
 import { Receipt } from "./public/Receipt";
+import { DonorsWall } from "./public/DonorsWall";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="gallery" element={<Gallery />} />
             <Route path="donate" element={<Donate />} />
+            <Route path="donors" element={<DonorsWall />} />
             <Route path="contact" element={<Contact />} />
             {/* Donor's own receipt link — public, keyed on an unguessable token. */}
             <Route path="receipt/:token" element={<Receipt />} />

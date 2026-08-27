@@ -134,6 +134,10 @@ class Donor(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
     address: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="active")
+    # Consent to be named on the public donors wall. Off unless the donor ticks
+    # the box on the pledge form — nobody is published by default, and donors
+    # already on file stay unlisted until they say otherwise.
+    show_publicly: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     # Normalised match keys — `phone`/`email` keep whatever the donor typed for
     # display, these are what repeat-donor lookup compares against.
     phone_key: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)

@@ -39,6 +39,10 @@ def create_donation(body: DonationCreate, db: Session = Depends(get_db)) -> Dona
     donor = find_or_create_donor(
         db, name=body.donor_name, phone=body.phone, email=body.email
     )
+    # Consent is additive: a tick opts in, an untick never silently removes a
+    # name the donor already agreed to. Staff unlist on request.
+    if body.show_publicly:
+        donor.show_publicly = True
 
     fy = financial_year()
     donation = Donation(

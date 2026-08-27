@@ -2,10 +2,12 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Reveal } from "../components/Reveal";
 import { CountUp } from "../components/CountUp";
+import { DonorCard, useDonorWall } from "./DonorsWall";
 import { STAT_ITEMS, FEATURE_ICONS, PRODUCT_META, GALLERY } from "./content";
 
 export function Home() {
   const { t } = useTranslation();
+  const wall = useDonorWall();
   const features = t("home.features", { returnObjects: true }) as { title: string; text: string }[];
   const products = t("home.products", { returnObjects: true }) as { name: string; desc: string }[];
 
@@ -182,6 +184,40 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* Donors — the people who feed the herd */}
+      {wall && wall.total_donors > 0 && (
+        <section className="mx-auto max-w-6xl px-4 py-16">
+          <Reveal className="text-center">
+            <div className="a-float text-4xl">🙏</div>
+            <h2 className="mt-2 text-3xl font-bold text-slate-800">{t("donorsWall.homeTitle")}</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-slate-500">
+              {t("donorsWall.homeText", {
+                donors: wall.total_donors,
+                donations: wall.total_donations,
+              })}
+            </p>
+          </Reveal>
+
+          {wall.listed.length > 0 && (
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {wall.listed.slice(0, 6).map((d, i) => (
+                <DonorCard key={d.name} name={d.name} count={d.donation_count} delay={i * 60} />
+              ))}
+            </div>
+          )}
+
+          <Reveal className="mt-8 text-center">
+            <Link
+              to="/donors"
+              className="group inline-flex items-center gap-1 font-semibold text-brand-600 hover:underline"
+            >
+              {t("donorsWall.seeAll")}
+              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+            </Link>
+          </Reveal>
+        </section>
+      )}
 
       {/* Donate CTA */}
       <section className="relative overflow-hidden bg-gradient-to-r from-brand-700 to-brand-600">

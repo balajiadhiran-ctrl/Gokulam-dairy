@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { api } from "../lib/api";
 import { inr, inrShort, sumMoney } from "../lib/money";
@@ -20,6 +20,18 @@ export function Donors() {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<(typeof SORTS)[number]>("recent");
   const [openId, setOpenId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+
+  // Donors opt in from the pledge form; this is how staff unlist someone who
+  // later asks to be removed (or list someone who asked in person).
+  const setListed = useMutation({
+    mutationFn: async ({ id, show }: { id: number; show: boolean }) =>
+      api.patch(`/donors/${id}`, { show_publicly: show }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["donors"] });
+      queryClient.invalidateQueries({ queryKey: ["donor"] });
+    },
+  });
 
   const { data: donors = [], isLoading } = useQuery({
     queryKey: ["donors", q, sort],
@@ -93,6 +105,7 @@ export function Donors() {
                 <th className="px-4 py-3 text-right font-semibold">{t("donors.colTotal")}</th>
                 <th className="px-4 py-3 text-right font-semibold">{t("donors.colReceived")}</th>
                 <th className="px-4 py-3 font-semibold">{t("donors.colLast")}</th>
+                <th className="px-4 py-3 text-center font-semibold">{t("donors.colListed")}</th>
               </tr>
             </thead>
             <tbody>
@@ -124,6 +137,19 @@ export function Donors() {
                     {d.last_donation_at
                       ? new Date(d.last_donation_at).toLocaleDateString()
                       : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setListed.mutate({ id: d.id, show: !d.show_publicly })}
+                      title={d.show_publicly ? t("donors.unlistHint") : t("donors.listHint")}
+                      className={`press rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
+                        d.show_publicly
+                          ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                      }`}
+                    >
+                      {d.show_publicly ? t("donors.listed") : t("donors.notListed")}
+                    </button>
                   </td>
                 </tr>
               ))}

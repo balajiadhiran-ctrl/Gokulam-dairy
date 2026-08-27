@@ -190,6 +190,10 @@ class DonationCreate(BaseModel):
     unit: str | None = Field(default=None, pattern=UNIT_RE)
     quantity: str | None = Field(default=None, max_length=80)
     message: str | None = Field(default=None, max_length=500)
+    # Ticking this asks to be named on the public donors wall. It can only turn
+    # listing on; removing a name is done by the farm, so a donor who consented
+    # once is never silently unlisted by a later pledge.
+    show_publicly: bool = False
 
 
 class DonationOut(BaseModel):
@@ -244,6 +248,22 @@ class ReceiptOut(BaseModel):
     confirmed: bool
 
 
+# ---- Public donors wall --------------------------------------------------
+class WallDonor(BaseModel):
+    """One name on the public wall. Deliberately carries no contact details and
+    no rupee figures — just who gave and how often."""
+    name: str
+    donation_count: int
+
+
+class DonorWall(BaseModel):
+    """Totals count everyone on the register; `listed` holds only the donors
+    who asked to be named, so the figures stay true without publishing anyone."""
+    total_donors: int
+    total_donations: int
+    listed: list[WallDonor]
+
+
 # ---- Donors (the registry behind the donations) --------------------------
 class DonorBase(BaseModel):
     name: str = Field(min_length=1, max_length=120)
@@ -263,6 +283,7 @@ class DonorOut(BaseModel):
     address: str | None = None
     notes: str | None = None
     status: str
+    show_publicly: bool = False
     created_at: datetime
 
 
@@ -285,3 +306,4 @@ class DonorUpdate(BaseModel):
     address: str | None = Field(default=None, max_length=255)
     notes: str | None = Field(default=None, max_length=500)
     status: str | None = Field(default=None, pattern="^(active|inactive)$")
+    show_publicly: bool | None = None

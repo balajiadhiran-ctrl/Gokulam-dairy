@@ -23,6 +23,7 @@ An installable **PWA** with two faces sharing one backend:
 | Donate Feed — public pledge form → `POST /donations` | ✅ |
 | Donation receipts — invoice-format thank-you with the contribution value | ✅ |
 | Donor registry — repeat donors matched, lifetime totals, searchable | ✅ |
+| Public donors wall — true donor count, names shown only with consent | ✅ |
 | Admin donation triage (new → acknowledged → received) + valuation | ✅ |
 | JWT login + refresh, session restore | ✅ |
 | Permission-based RBAC (Super Admin, Admin, Manager, Staff, Owner) | ✅ |
@@ -92,7 +93,8 @@ docker run -p 8000:8000 gokulam    # → http://localhost:8000
 
 ## Routes
 
-- **Public site**: `/` (Home), `/gallery`, `/donate`, `/contact`, `/receipt/:token`
+- **Public site**: `/` (Home), `/gallery`, `/donate`, `/donors`, `/contact`,
+  `/receipt/:token`
 - **Login**: `/login`
 - **Admin ERP**: `/admin` (Dashboard), `/admin/owners`, `/admin/cattle`,
   `/admin/donations`, `/admin/donors`
@@ -152,7 +154,19 @@ Open http://127.0.0.1:5173 — Vite proxies `/api` to the backend on 8000.
 4. **Donations** — donor pledges with their receipt number and value; move them
    new → acknowledged → received, or price anything the rate card could not value.
 5. **Donors** — the registry: every donor with donation count, lifetime value and
-   last donation. Click a row for their full history and receipt links.
+   last donation. Click a row for their full history and receipt links. The
+   **On wall** toggle lists or unlists a name on the public page.
+
+### Naming donors publicly
+
+`/donors` is a thank-you wall. The two totals — donors and donations — count
+**everyone** on the register, because a number identifies nobody. Names appear
+only for donors who ticked *"Show my name on the donors wall"* on the pledge
+form; the box is unticked by default, and donors already on file when this was
+added stay unlisted. Phone numbers, email addresses and rupee amounts are never
+published. Ticking the box opts a donor in; a later pledge with the box unticked
+never silently removes a name they already agreed to — staff unlist on request
+from the admin **Donors** screen.
 
 ### Valuing in-kind donations
 

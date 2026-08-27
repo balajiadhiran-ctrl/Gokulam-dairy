@@ -21,6 +21,7 @@ export function PublicLayout() {
     { to: "/", label: t("nav.home"), end: true },
     { to: "/gallery", label: t("nav.gallery"), end: false },
     { to: "/donate", label: t("nav.donate"), end: false },
+    { to: "/donors", label: t("nav.donors"), end: false },
     { to: "/contact", label: t("nav.contact"), end: false },
   ];
 
