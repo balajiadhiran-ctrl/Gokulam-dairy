@@ -216,6 +216,91 @@ class Donation(Base, PKMixin, TimestampMixin):
     donor: Mapped[Donor | None] = relationship(back_populates="donations")
 
 
+class CattlePlacement(Base, PKMixin, TimestampMixin):
+    """One continuous stay of an animal with an owner — the billing history.
+
+    Rent is charged per cattle per day, so an invoice cannot be built from the
+    cattle table alone: it has to know *which days* each animal was on the farm
+    and whose it was. A row opens when an animal arrives (or comes back into a
+    billable status), and closes the day it leaves, is sold, dies, or moves to
+    another owner. `end_date` is the last billable day, inclusive; NULL means
+    the animal is still here.
+    """
+
+    __tablename__ = "cattle_placements"
+    __table_args__ = (
+        Index("ix_placement_owner_dates", "owner_id", "start_date", "end_date"),
+    )
+
+    cattle_id: Mapped[int] = mapped_column(ForeignKey("cattle.id"), index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("owners.id"), index=True)
+    start_date: Mapped[date] = mapped_column(Date)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # Why the stay ended, for the audit trail: sold / deceased / transferred /
+    # removed / dry (left billable status).
+    end_reason: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+
+class RentInvoice(Base, PKMixin, TimestampMixin):
+    """A month's cattle rent for one owner.
+
+    `rate_per_day` and every line are frozen at generation time, so a later
+    change to the farm's rate never rewrites an invoice already sent.
+    """
+
+    __tablename__ = "rent_invoices"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "period_start", name="uq_rent_owner_period"),
+        Index("ix_rent_period", "period_start", "period_end"),
+    )
+
+    invoice_no: Mapped[str] = mapped_column(String(40), unique=True, index=True)
+    financial_year: Mapped[str] = mapped_column(String(9), index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("owners.id"), index=True)
+    period_start: Mapped[date] = mapped_column(Date)
+    period_end: Mapped[date] = mapped_column(Date)          # inclusive
+    issued_on: Mapped[date] = mapped_column(Date)
+    due_date: Mapped[date] = mapped_column(Date)
+    rate_per_day: Mapped[float] = mapped_column(Numeric(10, 2))
+    cattle_days: Mapped[int] = mapped_column(Integer, default=0)
+    amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
+    # draft -> sent -> paid, or void
+    status: Mapped[str] = mapped_column(String(16), default="draft", index=True)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    email_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Unguessable id for the owner's emailed invoice link.
+    public_token: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+
+    owner: Mapped[Owner] = relationship()
+    lines: Mapped[list["RentInvoiceLine"]] = relationship(
+        back_populates="invoice", cascade="all, delete-orphan", lazy="selectin"
+    )
+
+
+class RentInvoiceLine(Base, PKMixin):
+    """One animal's share of an invoice. Tag and name are snapshotted so the
+    invoice still reads correctly after the animal is sold or renamed."""
+
+    __tablename__ = "rent_invoice_lines"
+    invoice_id: Mapped[int] = mapped_column(
+        ForeignKey("rent_invoices.id", ondelete="CASCADE"), index=True
+    )
+    cattle_id: Mapped[int | None] = mapped_column(ForeignKey("cattle.id"), nullable=True)
+    tag_number: Mapped[str] = mapped_column(String(32))
+    name: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    animal_type: Mapped[str] = mapped_column(String(16))
+    from_date: Mapped[date] = mapped_column(Date)
+    to_date: Mapped[date] = mapped_column(Date)
+    days: Mapped[int] = mapped_column(Integer)
+    amount: Mapped[float] = mapped_column(Numeric(12, 2))
+    # "joined 12 Aug" / "sold 3 Aug" — why a line is a part month.
+    note: Mapped[str | None] = mapped_column(String(80), nullable=True)
+
+    invoice: Mapped[RentInvoice] = relationship(back_populates="lines")
+
+
 class MilkProduction(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
     """Twice-daily yield capture. UNIQUE(cattle_id, prod_date) prevents double
     entry (design §3.4). total_litres is computed in the service layer for

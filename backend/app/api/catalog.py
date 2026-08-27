@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_permission
 from app.db.session import get_db
 from app.models import Cattle, Owner, User
+from app.services.placements import sync_placement
 from app.schemas import (
     BreedCount,
     CattleCreate,
@@ -239,6 +240,9 @@ def create_cattle(
         )
     cattle = Cattle(**body.model_dump())
     db.add(cattle)
+    db.flush()
+    # Open the animal's billing history from today, so rent prorates correctly.
+    sync_placement(db, cattle)
     db.commit()
     db.refresh(cattle)
     return cattle
@@ -259,6 +263,9 @@ def update_cattle(
         _require_owner(db, data["owner_id"])
     for field, value in data.items():
         setattr(cattle, field, value)
+    # An owner transfer, a sale or a death all change what gets billed and to
+    # whom, so the placement history is reconciled on every edit.
+    sync_placement(db, cattle)
     db.commit()
     db.refresh(cattle)
     return cattle
@@ -274,6 +281,8 @@ def delete_cattle(
     if not cattle or cattle.deleted_at is not None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Cattle not found")
     _soft_delete(cattle)
+    # Stop the rent clock today rather than losing the days already billable.
+    sync_placement(db, cattle, reason="removed")
     db.commit()
 
 

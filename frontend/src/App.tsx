@@ -10,6 +10,8 @@ import { AllCattle } from "./pages/AllCattle";
 import { Donations } from "./pages/Donations";
 import { Donors } from "./pages/Donors";
 import { FeedCatalogue } from "./pages/FeedCatalogue";
+import { Rent } from "./pages/Rent";
+import { MyInvoices } from "./pages/MyInvoices";
 // Public marketing site / portfolio
 import { PublicLayout } from "./public/PublicLayout";
 import { Home } from "./public/Home";
@@ -18,6 +20,7 @@ import { Donate } from "./public/Donate";
 import { Contact } from "./public/Contact";
 import { Receipt } from "./public/Receipt";
 import { DonorsWall } from "./public/DonorsWall";
+import { RentInvoicePage } from "./public/RentInvoicePage";
 
 export default function App() {
   return (
@@ -33,6 +36,8 @@ export default function App() {
             <Route path="contact" element={<Contact />} />
             {/* Donor's own receipt link — public, keyed on an unguessable token. */}
             <Route path="receipt/:token" element={<Receipt />} />
+            {/* Owner's rent invoice link from the monthly email. */}
+            <Route path="invoice/:token" element={<RentInvoicePage />} />
           </Route>
 
           <Route path="/login" element={<Login />} />
@@ -95,6 +100,17 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="rent"
+              element={
+                <ProtectedRoute permission="rent.read">
+                  <Rent />
+                </ProtectedRoute>
+              }
+            />
+            {/* Owners see their own invoices — scoped server-side, so no
+                permission gate beyond being signed in. */}
+            <Route path="invoices" element={<MyInvoices />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

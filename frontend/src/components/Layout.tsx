@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { OwnerInvoiceReminder } from "./OwnerInvoiceReminder";
 
 const NAV = [
   { to: "/admin", key: "admin.dashboard", permission: "dashboard.read", end: true },
@@ -10,6 +11,7 @@ const NAV = [
   { to: "/admin/feed", key: "admin.feed", permission: "feed.read", end: false },
   { to: "/admin/donations", key: "admin.donations", permission: "donations.read", end: false },
   { to: "/admin/donors", key: "admin.donors", permission: "donors.read", end: false },
+  { to: "/admin/rent", key: "admin.rent", permission: "rent.read", end: false },
 ];
 
 export function Layout() {
@@ -44,6 +46,19 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        {user?.owner_id && (
+          <NavLink
+            to="/admin/invoices"
+            className={({ isActive }) =>
+              `mx-2 mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-300 hover:translate-x-1 ${
+                isActive ? "bg-white/15 font-medium" : "text-white/80 hover:bg-white/10"
+              }`
+            }
+          >
+            <span className="text-gold-400">🧾</span>
+            {t("admin.myInvoices")}
+          </NavLink>
+        )}
         <a
           href="/"
           className="mx-2 mb-1 rounded-lg px-3 py-2 text-sm text-white/80 transition-all duration-300 hover:translate-x-1 hover:bg-white/10"
@@ -95,6 +110,8 @@ export function Layout() {
 
         {/* Keyed on the path so each admin screen fades in on navigation. */}
         <main key={location.pathname} className="a-page flex-1 overflow-auto p-4 sm:p-6">
+          {/* Cattle owners are reminded of unpaid rent on every screen. */}
+          <OwnerInvoiceReminder />
           <Outlet />
         </main>
       </div>

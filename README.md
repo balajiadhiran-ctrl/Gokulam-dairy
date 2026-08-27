@@ -22,6 +22,7 @@ An installable **PWA** with two faces sharing one backend:
 | Cow/buffalo/farm imagery (free CC images in `public/images/`) | ✅ |
 | Donate Feed — public pledge form → `POST /donations` | ✅ |
 | Feed catalogue — CRUD of feed items and their cost (Super Admin / Admin) | ✅ |
+| Cattle rent — ₹/animal/day, prorated, monthly invoice emailed to owners | ✅ |
 | Donation receipts — invoice-format thank-you with the contribution value | ✅ |
 | Donor registry — repeat donors matched, lifetime totals, searchable | ✅ |
 | Public donors wall — true donor count; names, gifts and dates with consent | ✅ |
@@ -95,10 +96,11 @@ docker run -p 8000:8000 gokulam    # → http://localhost:8000
 ## Routes
 
 - **Public site**: `/` (Home), `/gallery`, `/donate`, `/donors`, `/contact`,
-  `/receipt/:token`
+  `/receipt/:token`, `/invoice/:token`
 - **Login**: `/login`
 - **Admin ERP**: `/admin` (Dashboard), `/admin/owners`, `/admin/cattle`,
-  `/admin/feed`, `/admin/donations`, `/admin/donors`
+  `/admin/feed`, `/admin/donations`, `/admin/donors`, `/admin/rent`
+- **Owner portal**: `/admin/invoices` (their own rent invoices)
 
 ## Prerequisites
 
@@ -160,6 +162,69 @@ Open http://127.0.0.1:5173 — Vite proxies `/api` to the backend on 8000.
 5. **Donors** — the registry: every donor with donation count, lifetime value and
    last donation. Click a row for their full history and receipt links. The
    **On wall** toggle lists or unlists a name on the public page.
+
+## Cattle rent
+
+Owners pay the farm a daily rate for each animal it keeps — ₹10 per animal per
+day by default (`RENT_PER_CATTLE_PER_DAY`).
+
+**It is prorated, not a flat monthly charge.** Every arrival, sale, death,
+removal and owner transfer is dated in `cattle_placements`, so an animal that
+joined on the 12th is billed 20 days, one sold on the 3rd is billed 3, and one
+that moved between owners is billed to each of them for the days it was theirs.
+The placement rows are maintained automatically by the cattle endpoints; you
+never edit them by hand.
+
+**Invoices are issued on the 25th for the month just gone** (on 25 Sep, the
+period is 1–31 Aug), due `RENT_DUE_DAYS` later. Active and dry animals are
+billable; sold and deceased ones stop on their exit date.
+
+Every figure — the rate, the days, each line — is frozen onto the invoice when
+it is generated, so changing the rate later never rewrites an invoice that has
+already gone out. Re-running a month is safe: an owner already invoiced for the
+period is skipped, so nobody is ever double-billed.
+
+Staff work in **`/admin/rent`**: preview a month before anyone is charged, then
+*Generate & email*, resend a failed one, or mark an invoice paid. Owners see
+their own invoices at **`/admin/invoices`**, with an outstanding-balance
+reminder on every screen of their login until it is paid, plus a link in the
+email that opens `/invoice/:token` without signing in.
+
+### Running the monthly job
+
+The app runs the job at startup and does nothing until the 25th — enough for a
+free-tier instance that restarts when it wakes. For a guaranteed run, point a
+real scheduler at:
+
+```bash
+python -m app.jobs.rent_run                # bill the month just gone
+python -m app.jobs.rent_run --month 2026-08
+python -m app.jobs.rent_run --dry-run      # show totals, write nothing
+python -m app.jobs.rent_run --no-email     # generate without sending
+```
+
+Safe to run repeatedly. Set `RENT_AUTO_RUN=false` to disable the startup job if
+you schedule it externally.
+
+### Sending the emails
+
+Invoices generate and appear in each owner's login whether or not mail works —
+billing never depends on the mail server. Nothing is emailed until these are
+set (on Render: **Environment → Add Environment Variable**):
+
+```
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=farm@gokulamdairy.in
+SMTP_PASSWORD=<an app password, not the account password>
+SMTP_FROM=Gokulam Dairy Farm <farm@gokulamdairy.in>
+PUBLIC_BASE_URL=https://gokulam-dairy.onrender.com
+```
+
+`PUBLIC_BASE_URL` is what makes the "View invoice online" button in the email
+point somewhere. Until SMTP is configured the admin screen shows a warning and
+each run reports that nothing was sent. **Owners also need an email address on
+their record** — `/admin/rent` flags the ones missing it before you run.
 
 ### Naming donors publicly
 

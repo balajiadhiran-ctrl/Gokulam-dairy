@@ -363,3 +363,115 @@ class DonorUpdate(BaseModel):
     notes: str | None = Field(default=None, max_length=500)
     status: str | None = Field(default=None, pattern="^(active|inactive)$")
     show_publicly: bool | None = None
+
+
+# ---- Cattle rent invoices ------------------------------------------------
+class RentInvoiceLineOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    cattle_id: int | None = None
+    tag_number: str
+    name: str | None = None
+    animal_type: str
+    from_date: date
+    to_date: date
+    days: int
+    amount: Decimal
+    note: str | None = None
+
+
+class RentInvoiceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    invoice_no: str
+    financial_year: str
+    owner_id: int
+    period_start: date
+    period_end: date
+    issued_on: date
+    due_date: date
+    rate_per_day: Decimal
+    cattle_days: int
+    amount: Decimal
+    status: str
+    sent_at: datetime | None = None
+    paid_at: datetime | None = None
+    email_to: str | None = None
+    email_error: str | None = None
+    public_token: str
+    created_at: datetime
+
+
+class RentInvoiceDetail(RentInvoiceOut):
+    owner_name: str = ""
+    lines: list[RentInvoiceLineOut] = []
+    amount_in_words: str = ""
+    farm: ReceiptFarm | None = None
+
+
+class RentPreviewLine(BaseModel):
+    """A line the run *would* create — nothing is written."""
+    cattle_id: int
+    tag_number: str
+    name: str | None = None
+    animal_type: str
+    from_date: date
+    to_date: date
+    days: int
+    amount: Decimal
+    note: str | None = None
+
+
+class RentPreviewOwner(BaseModel):
+    owner_id: int
+    owner_code: str
+    owner_name: str
+    email: str | None = None
+    cattle_days: int
+    amount: Decimal
+    already_invoiced: bool = False
+    lines: list[RentPreviewLine] = []
+
+
+class RentPreview(BaseModel):
+    period_start: date
+    period_end: date
+    rate_per_day: Decimal
+    owners: list[RentPreviewOwner]
+    total_amount: Decimal
+    total_cattle_days: int
+
+
+class RentRunRequest(BaseModel):
+    """Which month to bill. Defaults to the month just gone, which is what the
+    25th-of-the-month job uses."""
+    year: int | None = Field(default=None, ge=2000, le=2100)
+    month: int | None = Field(default=None, ge=1, le=12)
+    send_email: bool = True
+
+
+class RentRunResult(BaseModel):
+    period_start: date
+    period_end: date
+    created: int
+    skipped_existing: int
+    emailed: int
+    email_failed: int
+    mail_configured: bool
+    invoices: list[RentInvoiceOut] = []
+
+
+class RentInvoiceUpdate(BaseModel):
+    status: str | None = Field(default=None, pattern="^(draft|sent|paid|void)$")
+    email_to: str | None = Field(default=None, max_length=255)
+
+
+class RentSettingsOut(BaseModel):
+    """What the admin screen shows about how billing is configured."""
+    rate_per_cattle_per_day: Decimal
+    issue_day: int
+    due_days: int
+    auto_run: bool
+    auto_send: bool
+    mail_configured: bool
+    billable_statuses: list[str]

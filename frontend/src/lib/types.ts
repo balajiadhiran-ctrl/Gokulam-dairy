@@ -283,3 +283,101 @@ export interface DonorWall {
   /** Only the donors who consented to being named. */
   listed: WallDonor[];
 }
+
+// ---- Cattle rent -------------------------------------------------------
+export type RentStatus = "draft" | "sent" | "paid" | "void";
+
+export interface RentInvoiceLine {
+  id: number;
+  cattle_id: number | null;
+  tag_number: string;
+  name: string | null;
+  animal_type: AnimalType;
+  from_date: string;
+  to_date: string;
+  days: number;
+  amount: Money;
+  /** "joined 12 Aug" / "sold 3 Aug" — why a line is a part month. */
+  note: string | null;
+}
+
+export interface RentInvoice {
+  id: number;
+  invoice_no: string;
+  financial_year: string;
+  owner_id: number;
+  period_start: string;
+  period_end: string;
+  issued_on: string;
+  due_date: string;
+  rate_per_day: Money;
+  cattle_days: number;
+  amount: Money;
+  status: RentStatus;
+  sent_at: string | null;
+  paid_at: string | null;
+  email_to: string | null;
+  email_error: string | null;
+  public_token: string;
+  created_at: string;
+}
+
+export interface RentInvoiceDetail extends RentInvoice {
+  owner_name: string;
+  lines: RentInvoiceLine[];
+  amount_in_words: string;
+  farm: ReceiptFarm | null;
+}
+
+export interface RentPreviewLine {
+  cattle_id: number;
+  tag_number: string;
+  name: string | null;
+  animal_type: AnimalType;
+  from_date: string;
+  to_date: string;
+  days: number;
+  amount: Money;
+  note: string | null;
+}
+
+export interface RentPreviewOwner {
+  owner_id: number;
+  owner_code: string;
+  owner_name: string;
+  email: string | null;
+  cattle_days: number;
+  amount: Money;
+  already_invoiced: boolean;
+  lines: RentPreviewLine[];
+}
+
+export interface RentPreview {
+  period_start: string;
+  period_end: string;
+  rate_per_day: Money;
+  owners: RentPreviewOwner[];
+  total_amount: Money;
+  total_cattle_days: number;
+}
+
+export interface RentRunResult {
+  period_start: string;
+  period_end: string;
+  created: number;
+  skipped_existing: number;
+  emailed: number;
+  email_failed: number;
+  mail_configured: boolean;
+  invoices: RentInvoice[];
+}
+
+export interface RentSettings {
+  rate_per_cattle_per_day: Money;
+  issue_day: number;
+  due_days: number;
+  auto_run: boolean;
+  auto_send: boolean;
+  mail_configured: boolean;
+  billable_statuses: string[];
+}

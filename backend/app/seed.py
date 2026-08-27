@@ -54,11 +54,17 @@ PERMISSIONS = [
     ("feed.create", "feed"),
     ("feed.update", "feed"),
     ("feed.delete", "feed"),
+    ("rent.read", "rent"),
+    ("rent.manage", "rent"),
 ]
 
 # Maintaining the feed catalogue and its costs is a Super Admin / Admin job.
 # Everyone else can read it so they can see what the cattle are being fed.
 FEED_CRUD = ["feed.read", "feed.create", "feed.update", "feed.delete"]
+
+# Cattle rent: Super Admin and Admin bill and chase; a Manager can look.
+# Owners need no permission — /rent/invoices/mine is scoped to their own record.
+RENT_MANAGE = ["rent.read", "rent.manage"]
 
 # Owners + cattle full CRUD — shared by Super Admin and Admin.
 OWNER_CATTLE_CRUD = [
@@ -74,10 +80,11 @@ ROLES = {
     # Super Admin: everything, including future user/RBAC/settings management.
     "super-admin": ("Super Admin", "*"),
     # Admin: manage owners and their cattle (add owners + full cattle CRUD).
-    "admin": ("Admin", OWNER_CATTLE_CRUD + FEED_CRUD),
+    "admin": ("Admin", OWNER_CATTLE_CRUD + FEED_CRUD + RENT_MANAGE),
     "farm-manager": (
         "Farm Manager",
-        OWNER_CATTLE_CRUD + ["milk.read", "milk.create", "milk.update", "feed.read"],
+        OWNER_CATTLE_CRUD
+        + ["milk.read", "milk.create", "milk.update", "feed.read", "rent.read"],
     ),
     "staff": ("Staff", ["cattle.read", "milk.read", "milk.create", "feed.read"]),
     "owner": ("Owner", ["dashboard.read", "owners.read", "cattle.read", "milk.read"]),
@@ -95,6 +102,7 @@ def seed() -> None:
         _seed_feed_catalogue(db)
         _seed_donations(db)
         _backfill_donors(db)
+        _backfill_placements(db)
         db.commit()
         print("Seed complete.")
     finally:
@@ -291,6 +299,16 @@ def _seed_feed_catalogue(db: Session) -> None:
         )
     db.flush()
     print(f"  seeded {len(FEED_CATALOGUE)} feed items")
+
+
+def _backfill_placements(db: Session) -> None:
+    """Give existing cattle a billing history so rent can be prorated on a farm
+    whose animals predate the placements table."""
+    from app.services.placements import backfill
+
+    opened = backfill(db)
+    if opened:
+        print(f"  opened {opened} cattle placement(s) for rent billing")
 
 
 def _backfill_donors(db: Session) -> None:
