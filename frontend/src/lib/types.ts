@@ -3,7 +3,10 @@ export interface UserOut {
   id: number;
   email: string;
   full_name: string;
+  /** Set for a cattle owner's login; their data is row-scoped to it. */
   owner_id: number | null;
+  /** True while a staff-issued temporary password is still in place. */
+  must_change_password: boolean;
 }
 
 export interface TokenResponse {
@@ -32,10 +35,29 @@ export interface BreedCount {
 }
 
 export interface OwnerSummary extends Owner {
+  has_login: boolean;
+  login_email: string | null;
   cattle_count: number;
   cow_count: number;
   buffalo_count: number;
   breeds: BreedCount[];
+}
+
+/** Credentials for an owner's portal account. `password` comes back once. */
+export interface OwnerLogin {
+  owner_id: number;
+  owner_code: string;
+  owner_name: string;
+  email: string;
+  password: string | null;
+  created: boolean;
+  note: string | null;
+}
+
+export interface OwnerLoginBulkResult {
+  created: OwnerLogin[];
+  already_had_login: number;
+  failed: string[];
 }
 
 export type AnimalType = "cow" | "buffalo";

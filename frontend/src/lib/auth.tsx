@@ -9,6 +9,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   can: (permission: string) => boolean;
+  /** Refresh the cached user after it changes server-side (e.g. a password reset). */
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -41,6 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPermissions(data.permissions);
   };
 
+  const refreshUser = async () => {
+    const { data } = await api.get<UserOut>("/auth/me");
+    localStorage.setItem(USER_KEY, JSON.stringify(data));
+    setUser(data);
+  };
+
   const logout = () => {
     tokenStore.clear();
     localStorage.removeItem(USER_KEY);
@@ -56,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ready,
       login,
       logout,
+      refreshUser,
       can: (permission: string) => permissions.includes(permission),
     }),
     [user, permissions, ready],

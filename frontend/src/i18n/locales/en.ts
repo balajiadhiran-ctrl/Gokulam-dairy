@@ -422,6 +422,45 @@ export const en = {
     reminderOverdue_other: "across {{count}} invoices is overdue — the earliest was due {{date}}.",
     viewAll: "View invoices",
   },
+  ownerLogin: {
+    hasLogin: "Has a login",
+    noLogin: "No login yet",
+    create: "Create login",
+    reset: "Reset password",
+    createAll: "Create {{count}} missing login(s)",
+    allHaveLogins: "Every owner already has a login.",
+    resetConfirm:
+      "Reset the password for {{name}}? Their current one stops working immediately.",
+    titleOne: "Login for {{name}}",
+    titleMany: "{{count}} logins created",
+    onceTitle: "Write this down now.",
+    onceText:
+      "Passwords are stored scrambled, so this is the only time it can be read. If it is lost, reset it and issue a new one.",
+    loginId: "Login ID",
+    password: "Password",
+    copied: "Copied",
+    copyAll: "Copy all",
+    savedIt: "I have saved it",
+    instructions:
+      "Give these to the owner. They sign in at the Login page and will be asked to choose their own password straight away. They only ever see their own cattle, milk records and invoices.",
+  },
+  password: {
+    title: "Password",
+    text: "Change the password you use to sign in.",
+    forcedTitle: "Choose your password",
+    forcedText:
+      "You are signed in with a password the farm gave you. Pick your own to carry on.",
+    current: "Current password",
+    new: "New password",
+    confirm: "Repeat new password",
+    hint: "At least 8 characters.",
+    submit: "Change password",
+    tooShort: "The new password must be at least 8 characters.",
+    mismatch: "The two new passwords do not match.",
+    failed: "Could not change the password.",
+    doneTitle: "Password changed",
+    doneText: "Use your new password the next time you sign in.",
+  },
 };
 
 export type Resources = typeof en;

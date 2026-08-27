@@ -19,6 +19,12 @@ class UserOut(BaseModel):
     email: EmailStr
     full_name: str
     owner_id: int | None = None
+    must_change_password: bool = False
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
 
 
 class TokenResponse(BaseModel):
@@ -54,6 +60,9 @@ class BreedCount(BaseModel):
 
 class OwnerSummary(OwnerOut):
     """Owner plus aggregated herd stats for the owners overview cards."""
+    # Whether this owner has a portal login of their own.
+    has_login: bool = False
+    login_email: str | None = None
     cattle_count: int = 0
     cow_count: int = 0
     buffalo_count: int = 0
@@ -80,6 +89,27 @@ class OwnerUpdate(BaseModel):
     email: str | None = None
     village: str | None = Field(default=None, max_length=120)
     status: str | None = None
+
+
+class OwnerLoginOut(BaseModel):
+    """Credentials for an owner's portal account.
+
+    `password` is returned exactly once — at creation or reset — because it is
+    never stored in readable form. Staff write it down and hand it over.
+    """
+    owner_id: int
+    owner_code: str
+    owner_name: str
+    email: str
+    password: str | None = None
+    created: bool = True
+    note: str | None = None
+
+
+class OwnerLoginBulkResult(BaseModel):
+    created: list[OwnerLoginOut] = []
+    already_had_login: int = 0
+    failed: list[str] = []
 
 
 # ---- Cattle --------------------------------------------------------------

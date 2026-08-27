@@ -11,12 +11,19 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    hash_password,
     verify_password,
 )
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models import User
-from app.schemas import LoginRequest, RefreshRequest, TokenResponse, UserOut
+from app.schemas import (
+    ChangePasswordRequest,
+    LoginRequest,
+    RefreshRequest,
+    TokenResponse,
+    UserOut,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -54,6 +61,25 @@ def refresh(body: RefreshRequest, db: Session = Depends(get_db)) -> TokenRespons
     if not user or not user.is_active or user.deleted_at is not None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
     return _tokens_for(user)
+
+
+@router.post("/change-password", response_model=UserOut)
+def change_password(
+    body: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> UserOut:
+    """Set your own password. Owners are handed a generated one by staff and
+    must replace it before the portal lets them get on with anything else."""
+    if not verify_password(body.current_password, user.password_hash):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Current password is not correct")
+    if body.current_password == body.new_password:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "The new password must be different")
+    user.password_hash = hash_password(body.new_password)
+    user.must_change_password = False
+    db.commit()
+    db.refresh(user)
+    return UserOut.model_validate(user)
 
 
 @router.get("/me", response_model=UserOut)

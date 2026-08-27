@@ -41,3 +41,22 @@ def require_permission(code: str):
         return user
 
     return checker
+
+
+def own_scope(user: User) -> int | None:
+    """The owner id a caller is confined to, or None for farm staff.
+
+    A cattle owner's login is linked to their own owner record. Holding
+    `owners.read` / `cattle.read` lets them into the read endpoints at all, but
+    every list must then be narrowed to their own animals — otherwise one
+    farmer can enumerate the whole farm. Staff users have no `owner_id`, so
+    this returns None and nothing is filtered.
+    """
+    return user.owner_id
+
+
+def deny_other_owner(user: User, owner_id: int) -> None:
+    """Refuse a scoped caller access to another owner's record."""
+    scope = own_scope(user)
+    if scope is not None and scope != owner_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your record")

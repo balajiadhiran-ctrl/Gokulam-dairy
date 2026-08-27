@@ -12,6 +12,7 @@ import { Donors } from "./pages/Donors";
 import { FeedCatalogue } from "./pages/FeedCatalogue";
 import { Rent } from "./pages/Rent";
 import { MyInvoices } from "./pages/MyInvoices";
+import { ChangePassword } from "./pages/ChangePassword";
 // Public marketing site / portfolio
 import { PublicLayout } from "./public/PublicLayout";
 import { Home } from "./public/Home";
@@ -111,6 +112,8 @@ export default function App() {
             {/* Owners see their own invoices — scoped server-side, so no
                 permission gate beyond being signed in. */}
             <Route path="invoices" element={<MyInvoices />} />
+            {/* Anyone signed in can change their own password. */}
+            <Route path="password" element={<ChangePassword />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

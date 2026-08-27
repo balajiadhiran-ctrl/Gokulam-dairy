@@ -129,6 +129,9 @@ def _add_missing_columns() -> None:
         "donors": [
             ("show_publicly", "BOOLEAN DEFAULT 0 NOT NULL"),
         ],
+        "users": [
+            ("must_change_password", "BOOLEAN DEFAULT 0 NOT NULL"),
+        ],
     }
     inspector = inspect(engine)
     with engine.begin() as conn:

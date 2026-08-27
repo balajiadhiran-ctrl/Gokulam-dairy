@@ -70,6 +70,9 @@ class User(Base, PKMixin, TimestampMixin, SoftDeleteMixin):
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Set when staff hand out a generated password; the portal makes the owner
+    # choose their own before they can use the rest of their login.
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     owner_id: Mapped[int | None] = mapped_column(
         ForeignKey("owners.id"), nullable=True
     )  # set for owner-portal logins

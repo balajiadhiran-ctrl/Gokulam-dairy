@@ -6,7 +6,8 @@ import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useDataNames } from "../i18n/dataNames";
 import { OwnerFormModal } from "../components/OwnerFormModal";
-import type { Owner, OwnerSummary } from "../lib/types";
+import { OwnerLoginModal } from "../components/OwnerLoginModal";
+import type { Owner, OwnerLogin, OwnerLoginBulkResult, OwnerSummary } from "../lib/types";
 
 export function Owners() {
   const { t } = useTranslation();
@@ -16,6 +17,8 @@ export function Owners() {
   const [q, setQ] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Owner | null>(null);
+  // Credentials are readable exactly once, right after they are issued.
+  const [issued, setIssued] = useState<OwnerLogin[] | null>(null);
 
   const { data: owners = [], isLoading } = useQuery({
     queryKey: ["owners", q],
@@ -27,6 +30,28 @@ export function Owners() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["owners"] }),
     onError: (err: any) => alert(err?.response?.data?.detail ?? "Delete failed"),
   });
+
+  const issueLogin = useMutation({
+    mutationFn: async (ownerId: number) =>
+      (await api.post<OwnerLogin>(`/owners/${ownerId}/login`)).data,
+    onSuccess: (login) => {
+      setIssued([login]);
+      queryClient.invalidateQueries({ queryKey: ["owners"] });
+    },
+    onError: (err: any) => alert(err?.response?.data?.detail ?? "Could not create the login"),
+  });
+
+  const issueAll = useMutation({
+    mutationFn: async () => (await api.post<OwnerLoginBulkResult>("/owners/logins")).data,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["owners"] });
+      if (result.created.length) setIssued(result.created);
+      else alert(t("ownerLogin.allHaveLogins"));
+    },
+    onError: (err: any) => alert(err?.response?.data?.detail ?? "Could not create the logins"),
+  });
+
+  const withoutLogin = owners.filter((o) => !o.has_login).length;
 
   return (
     <div className="space-y-5">
@@ -42,13 +67,22 @@ export function Owners() {
             placeholder={t("owners.searchPlaceholder")}
             className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           />
+          {can("owners.update") && withoutLogin > 0 && (
+            <button
+              onClick={() => issueAll.mutate()}
+              disabled={issueAll.isPending}
+              className="press rounded-lg border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-60"
+            >
+              &#128273; {t("ownerLogin.createAll", { count: withoutLogin })}
+            </button>
+          )}
           {can("owners.create") && (
             <button
               onClick={() => {
                 setEditing(null);
                 setModalOpen(true);
               }}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+              className="press rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
             >
               {t("owners.addOwner")}
             </button>
@@ -108,7 +142,41 @@ export function Owners() {
                 ))}
               </div>
 
-              <div className="mt-4 flex gap-2 border-t border-slate-100 pt-3">
+              {/* Portal login: each owner signs in to see only their own
+                  herd and their own invoices. */}
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs">
+                {o.has_login ? (
+                  <span className="min-w-0">
+                    <span className="font-medium text-emerald-700">
+                      &#10003; {t("ownerLogin.hasLogin")}
+                    </span>
+                    <span className="block truncate font-mono text-[10px] text-slate-400">
+                      {o.login_email}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-slate-400">{t("ownerLogin.noLogin")}</span>
+                )}
+                {can("owners.update") && (
+                  <button
+                    onClick={() => {
+                      if (
+                        o.has_login &&
+                        !confirm(t("ownerLogin.resetConfirm", { name: ownerName(o) }))
+                      ) {
+                        return;
+                      }
+                      issueLogin.mutate(o.id);
+                    }}
+                    disabled={issueLogin.isPending}
+                    className="press shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-60"
+                  >
+                    {o.has_login ? t("ownerLogin.reset") : t("ownerLogin.create")}
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
                 <Link
                   to={`/admin/owners/${o.id}`}
                   className="flex-1 rounded-lg bg-brand-50 py-1.5 text-center text-xs font-medium text-brand-700 hover:bg-brand-100"
@@ -145,6 +213,7 @@ export function Owners() {
       {modalOpen && (
         <OwnerFormModal open={modalOpen} owner={editing} onClose={() => setModalOpen(false)} />
       )}
+      {issued && <OwnerLoginModal logins={issued} onClose={() => setIssued(null)} />}
     </div>
   );
 }

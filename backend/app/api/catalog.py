@@ -13,16 +13,19 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_permission
+from app.api.deps import deny_other_owner, own_scope, require_permission
 from app.db.session import get_db
 from app.models import Cattle, Owner, User
 from app.services.placements import sync_placement
+from app.services.owner_logins import find_login, login_email_for, provision
 from app.schemas import (
     BreedCount,
     CattleCreate,
     CattleOut,
     CattleUpdate,
     OwnerCreate,
+    OwnerLoginBulkResult,
+    OwnerLoginOut,
     OwnerOut,
     OwnerSummary,
     OwnerUpdate,
@@ -50,9 +53,13 @@ def list_owners(
     q: str | None = Query(default=None, description="search name or code"),
     status_filter: str | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_permission("owners.read")),
+    user: User = Depends(require_permission("owners.read")),
 ) -> list[OwnerSummary]:
     stmt = select(Owner).where(Owner.deleted_at.is_(None))
+    scope = own_scope(user)
+    if scope is not None:
+        # A cattle owner's login only ever sees their own record.
+        stmt = stmt.where(Owner.id == scope)
     if q:
         like = f"%{q}%"
         stmt = stmt.where(Owner.name.ilike(like) | Owner.owner_code.ilike(like))
@@ -83,6 +90,14 @@ def list_owners(
         key = breed or "Unknown"
         breeds.setdefault(owner_id, {})[key] = breeds.get(owner_id, {}).get(key, 0) + n
 
+    # One query for every owner's login, rather than one per row.
+    logins = {
+        u.owner_id: u
+        for u in db.scalars(
+            select(User).where(User.owner_id.isnot(None), User.deleted_at.is_(None))
+        )
+    }
+
     result: list[OwnerSummary] = []
     for o in owners:
         cow_n = cows.get(o.id, 0)
@@ -96,16 +111,113 @@ def list_owners(
         summary.cow_count = cow_n
         summary.buffalo_count = buf_n
         summary.breeds = breed_list
+        login = logins.get(o.id)
+        summary.has_login = login is not None
+        summary.login_email = login.email if login else None
         result.append(summary)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Owner portal logins
+# ---------------------------------------------------------------------------
+
+
+@router.post("/owners/{owner_id}/login", response_model=OwnerLoginOut)
+def create_owner_login(
+    owner_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("owners.update")),
+) -> OwnerLoginOut:
+    """Give this owner a portal account, or reset the password on the one they
+    have. The generated password comes back once and is never retrievable —
+    write it down before closing the dialog."""
+    owner = db.get(Owner, owner_id)
+    if not owner or owner.deleted_at is not None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Owner not found")
+
+    user, password, created = provision(db, owner)
+    db.commit()
+    return OwnerLoginOut(
+        owner_id=owner.id,
+        owner_code=owner.owner_code,
+        owner_name=owner.name,
+        email=user.email,
+        password=password,
+        created=created,
+        note=None if owner.email else "Login id only — this owner has no email address on file.",
+    )
+
+
+@router.post("/owners/logins", response_model=OwnerLoginBulkResult)
+def create_missing_owner_logins(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("owners.update")),
+) -> OwnerLoginBulkResult:
+    """Create accounts for every owner who does not have one. Owners who
+    already have a login are left alone — this never resets a password
+    somebody is already using."""
+    owners = list(
+        db.scalars(select(Owner).where(Owner.deleted_at.is_(None)).order_by(Owner.owner_code))
+    )
+    result = OwnerLoginBulkResult()
+    for owner in owners:
+        if find_login(db, owner) is not None:
+            result.already_had_login += 1
+            continue
+        try:
+            user, password, _created = provision(db, owner)
+        except Exception as exc:  # noqa: BLE001 - one bad row must not stop the rest
+            db.rollback()
+            result.failed.append(f"{owner.owner_code}: {exc}")
+            continue
+        result.created.append(
+            OwnerLoginOut(
+                owner_id=owner.id,
+                owner_code=owner.owner_code,
+                owner_name=owner.name,
+                email=user.email,
+                password=password,
+                created=True,
+                note=None if owner.email else "Login id only — no email address on file.",
+            )
+        )
+    db.commit()
+    return result
+
+
+@router.get("/owners/{owner_id}/login", response_model=OwnerLoginOut)
+def get_owner_login(
+    owner_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("owners.read")),
+) -> OwnerLoginOut:
+    """Who the owner signs in as. Never returns a password — passwords are
+    stored hashed, so a forgotten one is reset, not looked up."""
+    owner = db.get(Owner, owner_id)
+    if not owner or owner.deleted_at is not None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Owner not found")
+    user = find_login(db, owner)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "This owner has no login yet")
+    return OwnerLoginOut(
+        owner_id=owner.id,
+        owner_code=owner.owner_code,
+        owner_name=owner.name,
+        email=user.email,
+        password=None,
+        created=False,
+        note="Reset the password to issue a new one.",
+    )
 
 
 @router.get("/owners/{owner_id}", response_model=OwnerOut)
 def get_owner(
     owner_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(require_permission("owners.read")),
+    user: User = Depends(require_permission("owners.read")),
 ) -> Owner:
+    deny_other_owner(user, owner_id)
     owner = db.get(Owner, owner_id)
     if not owner or owner.deleted_at is not None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Owner not found")

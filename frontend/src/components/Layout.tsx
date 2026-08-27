@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { OwnerInvoiceReminder } from "./OwnerInvoiceReminder";
+import { ChangePassword } from "../pages/ChangePassword";
 
 const NAV = [
   { to: "/admin", key: "admin.dashboard", permission: "dashboard.read", end: true },
@@ -46,6 +47,17 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        <NavLink
+          to="/admin/password"
+          className={({ isActive }) =>
+            `mx-2 mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-300 hover:translate-x-1 ${
+              isActive ? "bg-white/15 font-medium" : "text-white/80 hover:bg-white/10"
+            }`
+          }
+        >
+          <span className="text-gold-400">&#128273;</span>
+          {t("password.title")}
+        </NavLink>
         {user?.owner_id && (
           <NavLink
             to="/admin/invoices"
@@ -110,9 +122,17 @@ export function Layout() {
 
         {/* Keyed on the path so each admin screen fades in on navigation. */}
         <main key={location.pathname} className="a-page flex-1 overflow-auto p-4 sm:p-6">
-          {/* Cattle owners are reminded of unpaid rent on every screen. */}
-          <OwnerInvoiceReminder />
-          <Outlet />
+          {user?.must_change_password ? (
+            // A staff-issued temporary password blocks the rest of the portal
+            // until the owner picks one of their own.
+            <ChangePassword forced />
+          ) : (
+            <>
+              {/* Cattle owners are reminded of unpaid rent on every screen. */}
+              <OwnerInvoiceReminder />
+              <Outlet />
+            </>
+          )}
         </main>
       </div>
     </div>
