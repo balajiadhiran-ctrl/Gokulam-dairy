@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { Logo } from "../components/Logo";
 
 const DEMO = [
   { role: "Super Admin", email: "superadmin@gokulam.in" },
@@ -45,7 +46,7 @@ export function Login() {
           <LanguageSwitcher variant="dark" />
         </div>
         <div className="mb-6 text-center">
-          <div className="text-3xl">🐄</div>
+          <Logo size={88} decorative={false} className="mx-auto" />
           <h1 className="mt-1 text-xl font-bold text-brand-800">{t("login.title")}</h1>
           <p className="text-xs text-slate-400">{t("login.subtitle")}</p>
         </div>

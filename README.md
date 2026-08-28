@@ -19,7 +19,7 @@ An installable **PWA** with two faces sharing one backend:
 |------|--------|
 | Multilingual — English / हिन्दी / தமிழ் with a language selector | ✅ |
 | Public website — Home, Gallery, Donate, Contact (responsive) | ✅ |
-| Cow/buffalo/farm imagery (free CC images in `public/images/`) | ✅ |
+| Farm's own emblem as the logo, real farm photography | ✅ |
 | Donate Feed — public pledge form → `POST /donations` | ✅ |
 | Feed catalogue — CRUD of feed items and their cost (Super Admin / Admin) | ✅ |
 | Cattle rent — ₹/animal/day, prorated, monthly invoice emailed to owners | ✅ |

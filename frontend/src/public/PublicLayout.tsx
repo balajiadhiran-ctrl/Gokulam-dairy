@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FARM } from "./content";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { Logo } from "../components/Logo";
 import { Reveal } from "../components/Reveal";
 import { useScrolled } from "../lib/motion";
 
@@ -34,7 +35,7 @@ export function PublicLayout() {
       >
         <div className="nav-shell mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link to="/" className="logo-link flex items-center gap-2 font-bold text-brand-700">
-            <span className="logo-mark text-2xl">🐄</span>
+            <Logo size={38} className="logo-mark" />
             <span className="leading-tight">
               GOKULAM
               <span className="block text-[10px] font-normal uppercase tracking-widest text-gold-500">
@@ -134,7 +135,7 @@ export function PublicLayout() {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
           <Reveal from="up">
             <div className="logo-link flex items-center gap-2 text-lg font-bold">
-              <span className="logo-mark text-2xl">🐄</span> Gokulam {t("common.dairy")}
+              <Logo size={34} className="logo-mark" /> Gokulam {t("common.dairy")}
             </div>
             <p className="mt-2 text-sm text-white/70">{t("common.tagline")}</p>
           </Reveal>

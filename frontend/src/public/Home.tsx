@@ -16,8 +16,8 @@ export function Home() {
       {/* Hero — slow ken-burns photo behind a staggered text entrance */}
       <section className="relative overflow-hidden">
         <img
-          src="/images/hero-farm.jpg"
-          alt="Gokulam Dairy Farm"
+          src="/images/farm-entrance.jpg"
+          alt="The decorated entrance to Gokulam Dairy Farm"
           className="a-ken-burns h-[62vh] min-h-[380px] w-full object-cover"
         />
         <div className="a-fade-in absolute inset-0 bg-gradient-to-r from-brand-800/80 to-brand-700/40" />

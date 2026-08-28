@@ -39,6 +39,21 @@ def invoice_url(invoice: RentInvoice) -> str | None:
     return f"{base}/invoice/{invoice.public_token}" if base else None
 
 
+def _letterhead() -> str:
+    """The farm emblem, or the cow glyph when we have no absolute URL for it.
+
+    Mail clients cannot resolve a relative path, so the image only appears once
+    PUBLIC_BASE_URL points at the deployed site.
+    """
+    base = settings.public_base_url.rstrip("/")
+    if not base:
+        return '<span style="font-size:20px;">&#128004;</span>'
+    return (
+        f'<img src="{base}/images/gokulam-emblem-sm.png" width="34" height="34" '
+        'alt="" style="vertical-align:middle;border:0;display:inline-block;">'
+    )
+
+
 def render_invoice_html(invoice: RentInvoice) -> str:
     """Self-contained HTML — inline styles only, since mail clients strip
     stylesheets and block external assets."""
@@ -85,7 +100,9 @@ def render_invoice_html(invoice: RentInvoice) -> str:
   <div style="border-bottom:2px solid #3968cc;padding-bottom:14px;
               display:flex;justify-content:space-between;">
     <div>
-      <div style="font-size:18px;font-weight:700;color:#3968cc;">🐄 {settings.farm_name}</div>
+      <div style="font-size:18px;font-weight:700;color:#3968cc;">
+        {_letterhead()} {settings.farm_name}
+      </div>
       <div style="font-size:12px;color:#64748b;line-height:1.6;">
         {settings.farm_address}<br>📞 {settings.farm_phone} · ✉️ {settings.farm_email}
       </div>

@@ -42,7 +42,7 @@ export const GALLERY: GalleryItem[] = [
   { src: "/images/buffalo2.jpg", category: "Buffaloes" },
   { src: "/images/buffalo3.jpg", category: "Buffaloes" },
   { src: "/images/calf1.jpg", category: "Calves" },
-  { src: "/images/hero-farm.jpg", category: "Farm" },
+  { src: "/images/farm-entrance.jpg", category: "Farm" },
   { src: "/images/grass.jpg", category: "Feed" },
   { src: "/images/feed.jpg", category: "Feed" },
 ];

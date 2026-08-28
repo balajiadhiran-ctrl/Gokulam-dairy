@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { inr } from "../lib/money";
+import { Logo } from "../components/Logo";
 import type { Receipt } from "../lib/types";
 
 /**
@@ -31,7 +32,7 @@ export function DonationReceipt({ receipt }: { receipt: Receipt }) {
       <div className="flex flex-wrap items-start justify-between gap-4 border-b-2 border-brand-700 pb-4">
         <div>
           <div className="flex items-center gap-2 text-lg font-bold text-brand-700">
-            <span className="text-2xl">🐄</span> {farm.name}
+            <Logo size={34} /> {farm.name}
           </div>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
             {farm.address}
