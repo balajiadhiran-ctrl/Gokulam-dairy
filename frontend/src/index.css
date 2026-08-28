@@ -461,11 +461,11 @@ a:hover > .logo-mark,
 }
 
 /* The emblem is set in pixels on the element, so the narrow-screen size has to
-   override that inline value. Keeps the header from crowding out the wordmark
-   and the menu button on a small phone. */
+   override that inline value. Leaves room for the language selector and the
+   menu button on a small phone. */
 @media (max-width: 480px) {
   .logo-mark {
-    width: 44px !important;
-    height: 44px !important;
+    width: 56px !important;
+    height: 56px !important;
   }
 }

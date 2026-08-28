@@ -34,14 +34,10 @@ export function PublicLayout() {
         }`}
       >
         <div className="nav-shell mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link to="/" className="logo-link flex items-center gap-2.5 font-bold text-brand-700">
-            <Logo size={56} className="logo-mark" />
-            <span className="leading-tight">
-              <span className="block text-xl tracking-wide">GOKULAM</span>
-              <span className="block text-[11px] font-normal uppercase tracking-widest text-gold-500">
-                {t("common.dairy")}
-              </span>
-            </span>
+          {/* The medallion already carries the farm's name in Tamil, so a
+              wordmark beside it only says it twice. The emblem is the brand. */}
+          <Link to="/" className="logo-link flex items-center" aria-label={FARM.name}>
+            <Logo size={72} className="logo-mark" />
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
