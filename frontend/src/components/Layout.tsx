@@ -28,7 +28,7 @@ export function Layout() {
       {/* Sidebar (design §8) */}
       <aside className="hidden w-60 shrink-0 flex-col glass-dark text-white sm:flex">
         <div className="flex items-center gap-2 px-5 py-4 text-lg font-bold tracking-wide">
-          <Logo size={30} /> GOKULAM
+          <Logo size={44} /> GOKULAM
         </div>
         <nav className="mt-2 flex-1 space-y-0.5 px-2">
           {visible.map((n, i) => (

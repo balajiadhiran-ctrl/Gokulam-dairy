@@ -17,7 +17,9 @@ export function Logo({
   /** Hidden from screen readers when the farm name sits beside it. */
   decorative?: boolean;
 }) {
-  const src = size > 128 ? "/images/gokulam-emblem.png" : "/images/gokulam-emblem-sm.png";
+  // The small file is 128px, so it only stays sharp up to 64 CSS pixels on a
+  // 2x display. Anything larger takes the 256px original.
+  const src = size > 64 ? "/images/gokulam-emblem.png" : "/images/gokulam-emblem-sm.png";
 
   return (
     <img

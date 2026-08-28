@@ -459,3 +459,13 @@ a:hover > .logo-mark,
     print-color-adjust: exact;
   }
 }
+
+/* The emblem is set in pixels on the element, so the narrow-screen size has to
+   override that inline value. Keeps the header from crowding out the wordmark
+   and the menu button on a small phone. */
+@media (max-width: 480px) {
+  .logo-mark {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}

@@ -46,7 +46,7 @@ export function Login() {
           <LanguageSwitcher variant="dark" />
         </div>
         <div className="mb-6 text-center">
-          <Logo size={88} decorative={false} className="mx-auto" />
+          <Logo size={124} decorative={false} className="mx-auto" />
           <h1 className="mt-1 text-xl font-bold text-brand-800">{t("login.title")}</h1>
           <p className="text-xs text-slate-400">{t("login.subtitle")}</p>
         </div>
