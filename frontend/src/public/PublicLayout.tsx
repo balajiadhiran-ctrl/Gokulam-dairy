@@ -36,8 +36,8 @@ export function PublicLayout() {
         <div className="nav-shell mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           {/* The medallion already carries the farm's name in Tamil, so a
               wordmark beside it only says it twice. The emblem is the brand. */}
-          <Link to="/" className="logo-link flex items-center" aria-label={FARM.name}>
-            <Logo size={72} className="logo-mark" />
+          <Link to="/" className="logo-link brand-slot" aria-label={FARM.name}>
+            <Logo size={104} className="logo-mark brand-emblem" />
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">

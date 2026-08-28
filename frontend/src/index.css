@@ -460,12 +460,53 @@ a:hover > .logo-mark,
   }
 }
 
-/* The emblem is set in pixels on the element, so the narrow-screen size has to
-   override that inline value. Leaves room for the language selector and the
-   menu button on a small phone. */
-@media (max-width: 480px) {
-  .logo-mark {
-    width: 56px !important;
-    height: 56px !important;
+/* ---- Header emblem ----
+   The medallion is taller than the navbar and deliberately hangs below it onto
+   the page, the way a plaque hangs on a gatepost. It sits out of the flow so
+   its size never stretches the header, and the slot reserves only the width it
+   needs. The size is set inline on the <img>, so these overrides need
+   !important. The overhang stays under the 3rem top padding of the inner
+   pages, so it never lands on their content. */
+.brand-slot {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 104px;
+  height: 46px;
+}
+.brand-emblem {
+  position: absolute;
+  left: 0;
+  top: -0.35rem;
+  width: 104px !important;
+  height: 104px !important;
+  filter: drop-shadow(0 10px 20px rgba(31, 41, 80, 0.28));
+  transition:
+    width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Pulls in as the header condenses, so it stops dominating once you scroll. */
+.is-scrolled .brand-emblem {
+  width: 78px !important;
+  height: 78px !important;
+  top: -0.2rem;
+}
+/* On a phone the emblem sits flush instead of hanging: the dropdown menu opens
+   directly under the header, and an overhang would land on its first item. The
+   slot is tall enough to hold the whole medallion, so the header simply grows. */
+@media (max-width: 640px) {
+  .brand-slot {
+    width: 78px;
+    height: 58px;
+  }
+  .brand-emblem {
+    width: 78px !important;
+    height: 78px !important;
+    top: -0.3rem;
+  }
+  .is-scrolled .brand-emblem {
+    width: 62px !important;
+    height: 62px !important;
   }
 }
